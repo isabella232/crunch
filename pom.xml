@@ -90,9 +90,9 @@ under the License.
     -->
     <guava.version>11.0.2</guava.version>
     <commons-io.version>2.1</commons-io.version>
-    <commons-lang.version>2.4</commons-lang.version>
+    <commons-lang.version>2.5</commons-lang.version>
     <commons-codec.version>1.4</commons-codec.version>
-    <commons-httpclient.version>3.0.1</commons-httpclient.version>
+    <commons-httpclient.version>3.1</commons-httpclient.version>
     <commons-logging.version>1.1.1</commons-logging.version>
     <commons-cli.version>1.2</commons-cli.version>
     <avro.version>${cdh.avro.version}</avro.version>
