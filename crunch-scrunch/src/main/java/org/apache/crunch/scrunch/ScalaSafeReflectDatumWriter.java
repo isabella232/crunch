@@ -17,6 +17,7 @@
  */
 package org.apache.crunch.scrunch;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -41,11 +42,12 @@ public class ScalaSafeReflectDatumWriter<T> extends ReflectDatumWriter<T> {
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   protected Iterator<Object> getArrayElements(Object array) {
     if (array instanceof scala.collection.Iterable) {
       return JavaConversions.asJavaIterable((scala.collection.Iterable) array).iterator(); 
     }
-    return super.getArrayElements(array);
+    return (Iterator) super.getArrayElements(array);
   }
 
   @Override
