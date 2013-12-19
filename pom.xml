@@ -458,9 +458,7 @@ under the License.
     <profile>
       <id>hadoop-1</id>
       <activation>
-        <property>
-          <name>!crunch.platform</name>
-        </property>
+        <activeByDefault>false</activeByDefault>
       </activation>
       <properties>
         <hadoop.version>1.1.2</hadoop.version>
@@ -471,10 +469,7 @@ under the License.
     <profile>
       <id>hadoop-2</id>
       <activation>
-        <property>
-          <name>crunch.platform</name>
-          <value>2</value>
-        </property>
+        <activeByDefault>true</activeByDefault>
       </activation>
       <properties>
         <hadoop.version>2.2.0</hadoop.version>
