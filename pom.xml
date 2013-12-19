@@ -472,7 +472,7 @@ under the License.
         <activeByDefault>true</activeByDefault>
       </activation>
       <properties>
-        <hadoop.version>2.2.0</hadoop.version>
+        <hadoop.version>${cdh.hadoop.version}</hadoop.version>
         <hbase.version>0.96.0-hadoop2</hbase.version>
         <commons-lang.version>2.5</commons-lang.version>
         <slf4j.version>1.6.1</slf4j.version>
