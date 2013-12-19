@@ -480,7 +480,7 @@ under the License.
       </activation>
       <properties>
         <hadoop.version>${cdh.hadoop.version}</hadoop.version>
-        <hbase.version>0.96.0-hadoop2</hbase.version>
+        <hbase.version>${cdh.hbase.version}</hbase.version>
         <commons-lang.version>2.5</commons-lang.version>
         <slf4j.version>${cdh.slf4j.version}</slf4j.version>
         <hbase.midfix>hadoop2</hbase.midfix>
