@@ -100,7 +100,7 @@ under the License.
     <javassist.version>3.16.1-GA</javassist.version>
     <jackson.version>1.8.8</jackson.version>
     <protobuf-java.version>2.5.0</protobuf-java.version>
-    <libthrift.version>0.8.0</libthrift.version>
+    <libthrift.version>${cdh.thrift.version}</libthrift.version>
     <slf4j.version>${cdh.slf4j.version}</slf4j.version>
     <log4j.version>1.2.17</log4j.version>
     <junit.version>4.10</junit.version>
