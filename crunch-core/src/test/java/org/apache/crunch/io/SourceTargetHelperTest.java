@@ -50,9 +50,8 @@ public class SourceTargetHelperTest {
    * Mock FileSystem that returns null for {@link FileSystem#listStatus(Path)}.
    */
   static class MockFileSystem extends LocalFileSystem {
-
     @Override
-    public FileStatus[] listStatus(Path f) throws IOException {
+    public FileStatus[] globStatus(Path f) throws IOException {
       return null;
     }
   }
