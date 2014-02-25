@@ -86,7 +86,7 @@ public class Writables {
           .put(7, BooleanWritable.class)
           .put(8, TupleWritable.class)
           .put(9, TextMapWritable.class)
-          .put(10, UnionWritable.class)
+          .put(10, Writable.class) // NOTE: Placeholder for UnionWritable type that doesn't exist yet.
           .build());
 
   /**
