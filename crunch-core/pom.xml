@@ -42,11 +42,13 @@ under the License.
     <dependency>
       <groupId>org.apache.avro</groupId>
       <artifactId>avro-mapred</artifactId>
+      <classifier>${avro.hadoop.classifier}</classifier>
     </dependency>
 
     <dependency>
       <groupId>org.apache.avro</groupId>
       <artifactId>trevni-avro</artifactId>
+      <classifier>${avro.hadoop.classifier}</classifier>
     </dependency>
     <dependency>
       <groupId>org.apache.avro</groupId>

@@ -96,6 +96,7 @@ under the License.
     <commons-logging.version>1.1.1</commons-logging.version>
     <commons-cli.version>1.2</commons-cli.version>
     <avro.version>${cdh.avro.version}</avro.version>
+    <avro.hadoop.classifier>hadoop2</avro.hadoop.classifier>
     <parquet.version>${cdh.parquet.version}</parquet.version>
     <javassist.version>3.16.1-GA</javassist.version>
     <jackson.version>1.8.8</jackson.version>
@@ -228,6 +229,7 @@ under the License.
         <groupId>org.apache.avro</groupId>
         <artifactId>avro-mapred</artifactId>
         <version>${avro.version}</version>
+        <classifier>${avro.hadoop.classifier}</classifier>
         <exclusions>
           <exclusion>
             <groupId>org.apache.avro</groupId>
@@ -244,6 +246,7 @@ under the License.
         <groupId>org.apache.avro</groupId>
         <artifactId>trevni-avro</artifactId>
         <version>${avro.version}</version>
+        <classifier>${avro.hadoop.classifier}</classifier>
         <exclusions>
           <exclusion>
             <groupId>org.apache.hadoop</groupId>
@@ -469,18 +472,6 @@ under the License.
   </dependencyManagement>
 
   <profiles>
-    <profile>
-      <id>hadoop-1</id>
-      <activation>
-        <activeByDefault>false</activeByDefault>
-      </activation>
-      <properties>
-        <hadoop.version>1.1.2</hadoop.version>
-        <hbase.version>0.96.0-hadoop1</hbase.version>
-        <hbase.midfix>hadoop1</hbase.midfix>
-        <avro.hadoop.classifier>hadoop1</avro.hadoop.classifier>
-      </properties>
-    </profile>
     <profile>
       <id>hadoop-2</id>
       <activation>
