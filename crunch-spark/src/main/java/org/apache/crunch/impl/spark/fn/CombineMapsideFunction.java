@@ -36,7 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class CombineMapsideFunction<K, V> extends PairFlatMapFunction<Iterator<Tuple2<K, V>>, K, V> {
+public class CombineMapsideFunction<K, V> implements PairFlatMapFunction<Iterator<Tuple2<K, V>>, K, V> {
 
   private static final int REDUCE_EVERY_N = 50000;
 
@@ -55,7 +55,7 @@ public class CombineMapsideFunction<K, V> extends PairFlatMapFunction<Iterator<T
     int cnt = 0;
     while (iter.hasNext()) {
       Tuple2<K, V> t = iter.next();
-      cache.put(t._1, t._2);
+      cache.put(t._1(), t._2());
       cnt++;
       if (cnt % REDUCE_EVERY_N == 0) {
         cache = reduce(cache);

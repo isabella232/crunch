@@ -70,9 +70,9 @@ public class DoTable<K, V> extends BaseDoTable<K, V> implements SparkCollection 
     JavaRDDLike<?, ?> parentRDD = ((SparkCollection) getOnlyParent()).getJavaRDDLike(runtime);
     fn.configure(runtime.getConfiguration());
     if (parentRDD instanceof JavaRDD) {
-      return ((JavaRDD) parentRDD).mapPartitions(new PairFlatMapDoFn(fn, runtime.getRuntimeContext()));
+      return ((JavaRDD) parentRDD).mapPartitionsToPair(new PairFlatMapDoFn(fn, runtime.getRuntimeContext()));
     } else {
-      return ((JavaPairRDD) parentRDD).mapPartitions(new PairFlatMapPairDoFn(fn, runtime.getRuntimeContext()));
+      return ((JavaPairRDD) parentRDD).mapPartitionsToPair(new PairFlatMapPairDoFn(fn, runtime.getRuntimeContext()));
     }
   }
 }

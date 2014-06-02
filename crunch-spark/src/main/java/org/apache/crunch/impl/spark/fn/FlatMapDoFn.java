@@ -23,7 +23,7 @@ import org.apache.spark.api.java.function.FlatMapFunction;
 
 import java.util.Iterator;
 
-public class FlatMapDoFn<S, T> extends FlatMapFunction<Iterator<S>, T> {
+public class FlatMapDoFn<S, T> implements FlatMapFunction<Iterator<S>, T> {
   private final DoFn<S, T> fn;
   private final SparkRuntimeContext ctxt;
 

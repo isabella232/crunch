@@ -21,7 +21,7 @@ import org.apache.crunch.types.Converter;
 import org.apache.spark.api.java.function.PairFunction;
 import scala.Tuple2;
 
-public class OutputConverterFunction<K, V, S> extends PairFunction<S, K, V> {
+public class OutputConverterFunction<K, V, S> implements PairFunction<S, K, V> {
   private Converter<K, V, S, ?> converter;
 
   public OutputConverterFunction(Converter<K, V, S, ?> converter) {

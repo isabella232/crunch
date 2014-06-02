@@ -27,7 +27,7 @@ import scala.Tuple2;
 
 import java.util.Iterator;
 
-public class FlatMapPairDoFn<K, V, T> extends FlatMapFunction<Iterator<Tuple2<K, V>>, T> {
+public class FlatMapPairDoFn<K, V, T> implements FlatMapFunction<Iterator<Tuple2<K, V>>, T> {
   private final DoFn<Pair<K, V>, T> fn;
   private final SparkRuntimeContext ctxt;
 

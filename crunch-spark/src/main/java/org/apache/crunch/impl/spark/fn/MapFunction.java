@@ -21,7 +21,7 @@ import org.apache.crunch.MapFn;
 import org.apache.crunch.impl.spark.SparkRuntimeContext;
 import org.apache.spark.api.java.function.Function;
 
-public class MapFunction extends Function<Object, Object> {
+public class MapFunction implements Function<Object, Object> {
   private final MapFn fn;
   private final SparkRuntimeContext ctxt;
   private boolean initialized;

@@ -26,7 +26,7 @@ import scala.Tuple2;
 
 import java.util.List;
 
-public class PairMapIterableFunction<K, V, S, T> extends PairFunction<Pair<K, List<V>>, S, Iterable<T>> {
+public class PairMapIterableFunction<K, V, S, T> implements PairFunction<Pair<K, List<V>>, S, Iterable<T>> {
 
   private final MapFn<Pair<K, List<V>>, Pair<S, Iterable<T>>> fn;
   private final SparkRuntimeContext runtimeContext;

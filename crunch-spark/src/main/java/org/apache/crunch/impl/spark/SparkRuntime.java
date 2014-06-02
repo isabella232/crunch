@@ -237,11 +237,11 @@ public class SparkRuntime extends AbstractFuture<PipelineResult> implements Pipe
             if (rdd instanceof JavaRDD) {
               outRDD = ((JavaRDD) rdd)
                   .map(new MapFunction(ptype.getOutputMapFn(), ctxt))
-                  .map(new OutputConverterFunction(c));
+                  .mapToPair(new OutputConverterFunction(c));
             } else {
               outRDD = ((JavaPairRDD) rdd)
                   .map(new PairMapFunction(ptype.getOutputMapFn(), ctxt))
-                  .map(new OutputConverterFunction(c));
+                  .mapToPair(new OutputConverterFunction(c));
             }
             try {
               Job job = new Job(conf);
