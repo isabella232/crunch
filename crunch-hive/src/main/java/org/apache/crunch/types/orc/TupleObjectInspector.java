@@ -98,6 +98,11 @@ public class TupleObjectInspector<T extends Tuple> extends StructObjectInspector
     }
 
     @Override
+    public int getFieldID() {
+      return index;
+    }
+
+    @Override
     public ObjectInspector getFieldObjectInspector() {
       return oi;
     }
