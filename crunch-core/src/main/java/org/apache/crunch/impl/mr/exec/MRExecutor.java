@@ -21,8 +21,6 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.AbstractFuture;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.crunch.PipelineCallable;
 import org.apache.crunch.PipelineResult;
 import org.apache.crunch.SourceTarget;
@@ -34,6 +32,8 @@ import org.apache.crunch.impl.mr.MRJob;
 import org.apache.crunch.impl.mr.MRPipelineExecution;
 import org.apache.crunch.materialize.MaterializableIterable;
 import org.apache.hadoop.conf.Configuration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
@@ -56,7 +56,7 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public class MRExecutor extends AbstractFuture<PipelineResult> implements MRPipelineExecution {
 
-  private static final Log LOG = LogFactory.getLog(MRExecutor.class);
+  private static final Logger LOG = LoggerFactory.getLogger(MRExecutor.class);
 
   private final CrunchJobControl control;
   private final Map<PCollectionImpl<?>, Set<Target>> outputTargets;
