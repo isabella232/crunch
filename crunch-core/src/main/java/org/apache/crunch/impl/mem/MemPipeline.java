@@ -20,7 +20,9 @@ package org.apache.crunch.impl.mem;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -64,6 +66,7 @@ import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.mapreduce.Counters;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.AbstractFuture;
@@ -442,6 +445,11 @@ public class MemPipeline implements Pipeline {
     @Override
     public String getPlanDotFile() {
       return "";
+    }
+
+    @Override
+    public Map<String, String> getNamedDotFiles() {
+      return ImmutableMap.of("", "");
     }
 
     @Override

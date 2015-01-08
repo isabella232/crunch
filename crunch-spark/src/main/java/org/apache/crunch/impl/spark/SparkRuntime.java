@@ -18,6 +18,7 @@
 package org.apache.crunch.impl.spark;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -203,6 +204,11 @@ public class SparkRuntime extends AbstractFuture<PipelineResult> implements Pipe
   @Override
   public String getPlanDotFile() {
     return "";
+  }
+
+  @Override
+  public Map<String, String> getNamedDotFiles() {
+    return ImmutableMap.of("", "");
   }
 
   @Override
