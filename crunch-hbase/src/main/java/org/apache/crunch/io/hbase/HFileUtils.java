@@ -36,8 +36,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Longs;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.crunch.DoFn;
 import org.apache.crunch.Emitter;
 import org.apache.crunch.FilterFn;
@@ -67,10 +65,12 @@ import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.RawComparator;
 import org.apache.hadoop.io.SequenceFile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class HFileUtils {
 
-  private static final Log LOG = LogFactory.getLog(HFileUtils.class);
+  private static final Logger LOG = LoggerFactory.getLogger(HFileUtils.class);
 
   /** Compares {@code KeyValue} by its family, qualifier, timestamp (reversely), type (reversely) and memstoreTS. */
   private static final Comparator<KeyValue> KEY_VALUE_COMPARATOR = new Comparator<KeyValue>() {
@@ -126,9 +126,7 @@ public final class HFileUtils {
 
     @Override
     public boolean accept(C input) {
-      return Bytes.equals(
-          input.getFamilyArray(), input.getFamilyOffset(), input.getFamilyLength(),
-          family, 0, family.length);
+      return Bytes.equals(CellUtil.cloneFamily(input), family);
     }
   }
 
@@ -142,9 +140,7 @@ public final class HFileUtils {
 
     @Override
     public boolean accept(C input) {
-      return Bytes.compareTo(
-          input.getRowArray(), input.getRowOffset(), input.getRowLength(),
-          startRow, 0, startRow.length) >= 0;
+      return Bytes.compareTo(CellUtil.cloneRow(input), startRow) >= 0;
     }
   }
 
@@ -158,9 +154,7 @@ public final class HFileUtils {
 
     @Override
     public boolean accept(C input) {
-      return Bytes.compareTo(
-          input.getRowArray(), input.getRowOffset(), input.getRowLength(),
-          stopRow, 0, stopRow.length) < 0;
+      return Bytes.compareTo(CellUtil.cloneRow(input), stopRow) < 0;
     }
   }
 
@@ -224,8 +218,8 @@ public final class HFileUtils {
 
     @Override
     public boolean accept(C input) {
-      ByteBuffer f = ByteBuffer.wrap(input.getFamilyArray(), input.getFamilyOffset(), input.getFamilyLength());
-      ByteBuffer q = ByteBuffer.wrap(input.getQualifierArray(), input.getQualifierOffset(), input.getQualifierLength());
+      ByteBuffer f = ByteBuffer.wrap(CellUtil.cloneFamily(input));
+      ByteBuffer q = ByteBuffer.wrap(CellUtil.cloneQualifier(input));
       return familySet.contains(f) || qualifierSet.contains(Pair.of(f, q));
     }
   }
@@ -315,13 +309,13 @@ public final class HFileUtils {
   }
 
   /**
-   * Converts a bunch of {@link Cell}s into {@link Result}.
+   * Converts a bunch of {@link KeyValue}s into {@link Result}.
    *
-   * All {@code Cell}s belong to the same row are combined. Users may provide some filter
+   * All {@code KeyValue}s belong to the same row are combined. Users may provide some filter
    * conditions (specified by {@code scan}). Deletes are dropped and only a specified number
    * of versions are kept.
    *
-   * @param cells the input {@code Cell}s
+   * @param cells the input {@code KeyValue}s
    * @param scan filter conditions, currently we support start row, stop row and family map
    * @return {@code Result}s
    */
@@ -343,14 +337,14 @@ public final class HFileUtils {
 
     PTable<ByteBuffer, C> cellsByRow = cells.by(new ExtractRowFn<C>(), bytes());
     final int versions = scan.getMaxVersions();
-    return cellsByRow.groupByKey().parallelDo("CombineCellsIntoRow",
+    return cellsByRow.groupByKey().parallelDo("CombineKeyValueIntoRow",
         new DoFn<Pair<ByteBuffer, Iterable<C>>, Result>() {
           @Override
           public void process(Pair<ByteBuffer, Iterable<C>> input, Emitter<Result> emitter) {
             List<KeyValue> cells = Lists.newArrayList();
-            for (C cell : input.second()) {
+            for (Cell kv : input.second()) {
               try {
-                cells.add(KeyValue.cloneAndAddTags(cell, ImmutableList.<Tag>of())); // assuming the input fits into memory
+                cells.add(KeyValue.cloneAndAddTags(kv, ImmutableList.<Tag>of())); // assuming the input fits into memory
               } catch (Exception e) {
                 throw new RuntimeException(e);
               }
@@ -370,7 +364,7 @@ public final class HFileUtils {
       Path outputPath) throws IOException {
     HColumnDescriptor[] families = table.getTableDescriptor().getColumnFamilies();
     if (families.length == 0) {
-      LOG.warn(table + "has no column families");
+      LOG.warn("{} has no column families", table);
       return;
     }
     for (HColumnDescriptor f : families) {
@@ -384,7 +378,7 @@ public final class HFileUtils {
       PCollection<Put> puts,
       HTable table,
       Path outputPath) throws IOException {
-    PCollection<Cell> cells = puts.parallelDo("ConvertPutToCell", new DoFn<Put, Cell>() {
+    PCollection<Cell> cells = puts.parallelDo("ConvertPutToCells", new DoFn<Put, Cell>() {
       @Override
       public void process(Put input, Emitter<Cell> emitter) {
         for (Cell cell : Iterables.concat(input.getFamilyCellMap().values())) {
@@ -433,7 +427,7 @@ public final class HFileUtils {
       Configuration conf,
       Path path,
       List<KeyValue> splitPoints) throws IOException {
-    LOG.info("Writing " + splitPoints.size() + " split points to " + path);
+    LOG.info("Writing {} split points to {}", splitPoints.size(), path);
     SequenceFile.Writer writer = SequenceFile.createWriter(
         path.getFileSystem(conf),
         conf,

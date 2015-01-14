@@ -20,14 +20,14 @@ under the License.
 
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>com.cloudera.cdh</groupId>
-    <artifactId>cdh-root</artifactId>
-    <version>5.9.0-SNAPSHOT</version>
+    <groupId>org.apache</groupId>
+    <artifactId>apache</artifactId>
+    <version>16</version>
   </parent>
 
   <groupId>org.apache.crunch</groupId>
   <artifactId>crunch-parent</artifactId>
-  <version>0.11.0-cdh5.9.0-SNAPSHOT</version>
+  <version>0.13.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Apache Crunch</name>
@@ -40,30 +40,8 @@ under the License.
   </description>
 
   <prerequisites>
-    <maven>2.2.1</maven>
+    <maven>3.0.4</maven>
   </prerequisites>
-
-  <repositories>
-    <repository>
-      <id>cdh.repo</id>
-      <url>https://repository.cloudera.com/artifactory/cloudera-repos</url>
-      <name>Cloudera Repositories</name>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-    </repository>
-    <repository>
-      <id>cdh.snapshots.repo</id>
-      <url>https://repository.cloudera.com/artifactory/libs-snapshot-local</url>
-      <name>Cloudera Snapshots Repository</name>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-      <releases>
-        <enabled>false</enabled>
-      </releases>
-    </repository>
-  </repositories>
 
   <modules>
     <module>crunch-core</module>
@@ -81,8 +59,8 @@ under the License.
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <java.source.version>1.7</java.source.version>
-    <java.target.version>1.7</java.target.version>
+    <java.source.version>1.6</java.source.version>
+    <java.target.version>1.6</java.target.version>
     <!--
         NOTE: Please don't change any dependency versions here without
               checking first that they match those on Hadoop's runtime
@@ -91,21 +69,19 @@ under the License.
     -->
     <guava.version>11.0.2</guava.version>
     <commons-io.version>2.1</commons-io.version>
-    <commons-lang.version>2.6</commons-lang.version>
+    <commons-lang.version>2.4</commons-lang.version>
     <commons-codec.version>1.4</commons-codec.version>
-    <commons-httpclient.version>3.1</commons-httpclient.version>
-    <commons-logging.version>1.1.1</commons-logging.version>
+    <commons-httpclient.version>3.0.1</commons-httpclient.version>
     <commons-cli.version>1.2</commons-cli.version>
-    <avro.version>${cdh.avro.version}</avro.version>
-    <avro.hadoop.classifier>hadoop2</avro.hadoop.classifier>
-    <hive.version>${cdh.hive.version}</hive.version>
-    <parquet.version>${cdh.parquet.version}</parquet.version>
+    <avro.version>1.7.7</avro.version>
+    <hive.version>0.13.1</hive.version>
+    <parquet.version>1.4.3</parquet.version>
     <javassist.version>3.16.1-GA</javassist.version>
-    <jackson.version>${cdh.jackson.version}</jackson.version>
-    <protobuf-java.version>${cdh.protobuf.version}</protobuf-java.version>
-    <libthrift.version>${cdh.thrift.version}</libthrift.version>
-    <slf4j.version>${cdh.slf4j.version}</slf4j.version>
-    <log4j.version>1.2.17</log4j.version>
+    <jackson.version>1.8.8</jackson.version>
+    <protobuf-java.version>2.5.0</protobuf-java.version>
+    <libthrift.version>0.8.0</libthrift.version>
+    <slf4j.version>1.6.1</slf4j.version>
+    <log4j.version>1.2.15</log4j.version>
     <algebird.version>0.6.0</algebird.version>
     <junit.version>4.10</junit.version>
     <hamcrest.version>1.1</hamcrest.version>
@@ -113,23 +89,23 @@ under the License.
     <pkg>org.apache.crunch</pkg>
 
     <!-- Can be overridden by hadoop-2 profile, but these are the default values -->
-    <hadoop.version>1.1.2</hadoop.version>
-    <hbase.version>0.98.1-hadoop1</hbase.version>
-    <avro.classifier>hadoop1</avro.classifier>
+    <hadoop.version>2.5.2</hadoop.version>
+    <hbase.version>1.0.0</hbase.version>
+    <commons-lang.version>2.5</commons-lang.version>
+    <avro.classifier>hadoop2</avro.classifier>
 
     <scala.base.version>2.10</scala.base.version>
     <scala.version>2.10.4</scala.version>
     <scalatest.version>1.9.1</scalatest.version>
-    <spark.version>${cdh.spark.version}</spark.version>
+    <spark.version>1.2.0</spark.version>
     <jsr305.version>1.3.9</jsr305.version>
-    <pkg>org.apache.crunch</pkg>
   </properties>
 
   <scm>
     <url>https://git-wip-us.apache.org/repos/asf?p=crunch.git</url>
     <connection>scm:git:https://git-wip-us.apache.org/repos/asf/crunch.git</connection>
     <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/crunch.git</developerConnection>
-    <tag>apache-crunch-0.11</tag>
+    <tag>HEAD</tag>
   </scm>
 
   <issueManagement>
@@ -240,36 +216,11 @@ under the License.
         <groupId>org.apache.avro</groupId>
         <artifactId>avro-mapred</artifactId>
         <version>${avro.version}</version>
-        <classifier>${avro.hadoop.classifier}</classifier>
+        <classifier>${avro.classifier}</classifier>
         <exclusions>
           <exclusion>
             <groupId>org.apache.avro</groupId>
             <artifactId>avro-ipc</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.avro</groupId>
-        <artifactId>trevni-core</artifactId>
-        <version>${avro.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.avro</groupId>
-        <artifactId>trevni-avro</artifactId>
-        <version>${avro.version}</version>
-        <classifier>${avro.hadoop.classifier}</classifier>
-        <exclusions>
-          <exclusion>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-core</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.apache.avro</groupId>
-            <artifactId>avro-ipc</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.apache.avro</groupId>
-            <artifactId>avro-mapred</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
@@ -403,12 +354,6 @@ under the License.
       </dependency>
 
       <dependency>
-        <groupId>commons-logging</groupId>
-        <artifactId>commons-logging</artifactId>
-        <version>${commons-logging.version}</version>
-      </dependency>
-
-      <dependency>
         <groupId>commons-cli</groupId>
         <artifactId>commons-cli</artifactId>
         <version>${commons-cli.version}</version>
@@ -498,59 +443,40 @@ under the License.
         <artifactId>jsr305</artifactId>
         <version>${jsr305.version}</version>
      </dependency>
-    </dependencies>
+     <dependency>
+       <groupId>org.apache.hadoop</groupId>
+       <artifactId>hadoop-common</artifactId>
+       <version>${hadoop.version}</version>
+     </dependency>
+     <dependency>
+       <groupId>org.apache.hadoop</groupId>
+       <artifactId>hadoop-auth</artifactId>
+       <version>${hadoop.version}</version>
+     </dependency>
+     <dependency>
+       <groupId>org.apache.hadoop</groupId>
+       <artifactId>hadoop-hdfs</artifactId>
+       <version>${hadoop.version}</version>
+     </dependency>
+     <dependency>
+       <groupId>org.apache.hadoop</groupId>
+       <artifactId>hadoop-mapreduce-client-core</artifactId>
+       <version>${hadoop.version}</version>
+     </dependency>
+     <dependency>
+       <groupId>org.apache.hadoop</groupId>
+       <artifactId>hadoop-mapreduce-client-jobclient</artifactId>
+       <version>${hadoop.version}</version>
+       <type>test-jar</type>
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+       <groupId>org.apache.hadoop</groupId>
+       <artifactId>hadoop-annotations</artifactId>
+       <version>${hadoop.version}</version>
+     </dependency>
+   </dependencies>
   </dependencyManagement>
-
-  <profiles>
-    <profile>
-      <id>hadoop-2</id>
-      <activation>
-        <activeByDefault>true</activeByDefault>
-      </activation>
-      <properties>
-        <hadoop.version>${cdh.hadoop.version}</hadoop.version>
-        <hbase.version>${cdh.hbase.version}</hbase.version>
-        <slf4j.version>${cdh.slf4j.version}</slf4j.version>
-        <avro.hadoop.classifier>hadoop2</avro.hadoop.classifier>
-      </properties>
-      <dependencyManagement>
-        <dependencies>
-          <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-common</artifactId>
-            <version>${hadoop.version}</version>
-          </dependency>
-          <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-auth</artifactId>
-            <version>${hadoop.version}</version>
-          </dependency>
-          <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-hdfs</artifactId>
-            <version>${hadoop.version}</version>
-          </dependency>
-          <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-mapreduce-client-core</artifactId>
-            <version>${hadoop.version}</version>
-          </dependency>
-          <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-mapreduce-client-jobclient</artifactId>
-            <version>${hadoop.version}</version>
-            <type>test-jar</type>
-            <scope>test</scope>
-          </dependency>
-          <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-annotations</artifactId>
-            <version>${hadoop.version}</version>
-          </dependency>
-        </dependencies>
-      </dependencyManagement>
-    </profile>
-  </profiles>
 
   <build>
     <plugins>
@@ -560,80 +486,23 @@ under the License.
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-site-plugin</artifactId>
-        <inherited>false</inherited> 
-        <dependencies>
-          <dependency>
-            <groupId>org.apache.maven.wagon</groupId>
-            <artifactId>wagon-ssh</artifactId>
-            <version>1.0</version>
-          </dependency>
-        </dependencies>
-        <configuration>
-          <inputEncoding>UTF-8</inputEncoding>
-          <outputEncoding>UTF-8</outputEncoding>
-          <reportPlugins>
-            <plugin>
-              <groupId>org.apache.maven.plugins</groupId>
-              <artifactId>maven-project-info-reports-plugin</artifactId>
-              <version>2.4</version>
-              <reportSets>
-                <reportSet>
-                  <reports>
-                    <report>cim</report>
-                    <report>issue-tracking</report>
-                    <report>license</report>
-                    <report>mailing-list</report>
-                    <report>project-team</report>
-                    <report>scm</report>
-                  </reports>
-                </reportSet>
-              </reportSets>
-            </plugin>
-          </reportPlugins>
-        </configuration>
+        <artifactId>maven-javadoc-plugin</artifactId>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-        <version>2.8.1</version>
-        <configuration>
-          <show>public</show>
-          <nohelp>true</nohelp>
-          <excludePackageNames>${pkg}.hadoop.*:${pkg}.impl.mr.*:${pkg}.impl.mem.*:${pkg}.io.*:${pkg}.materialize:${pkg}.scrunch</excludePackageNames>
-          <groups>
-            <group>
-              <title>Core</title>
-              <packages>${pkg}:${pkg}.fn:${pkg}.impl.*:${pkg}.io:${pkg}.types:${pkg}.types.*:${pkg}.test:${pkg}.util</packages>
-            </group>
-            <group>
-              <title>Extension Library</title>
-              <packages>${pkg}.lib:${pkg}.lib.*</packages>
-            </group>
-            <group>
-              <title>User-contributed Functionality</title>
-              <packages>${pkg}.contrib:${pkg}.contrib.*</packages>
-            </group>
-            <group>
-              <title>Examples</title>
-              <packages>${pkg}.examples</packages>
-            </group>
-          </groups>
-        </configuration>
-        <executions>
-          <execution>
-            <id>aggregate</id>
-            <goals>
-              <goal>aggregate</goal>
-            </goals>
-            <phase>site</phase>
-          </execution>
-        </executions>
+        <artifactId>maven-checkstyle-plugin</artifactId>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-release-plugin</artifactId>
-        <version>2.3.2</version>
+        <version>2.5.2</version>
+        <dependencies>
+          <dependency>
+            <groupId>org.apache.maven.scm</groupId>
+            <artifactId>maven-scm-provider-gitexe</artifactId>
+            <version>1.8.1</version>
+          </dependency>
+        </dependencies>
         <configuration>
           <tagNameFormat>apache-crunch-@{project.version}</tagNameFormat>
           <autoVersionSubmodules>true</autoVersionSubmodules>
@@ -647,7 +516,7 @@ under the License.
         <plugin>
           <groupId>org.apache.rat</groupId>
           <artifactId>apache-rat-plugin</artifactId>
-          <version>0.8</version>
+          <version>0.11</version>
           <configuration>
             <excludes>
             <exclude>.git/**</exclude>
@@ -658,10 +527,10 @@ under the License.
             <exclude>**/resources/**/*.txt</exclude>
             <exclude>**/resources/*.avro</exclude>
             <exclude>**/resources/*.csv</exclude>
+            <exclude>**/resources/*.xml</exclude>
             <exclude>**/goal.txt</exclude>
             <exclude>**/target/generated-test-sources/**</exclude>
             <exclude>**/scripts/scrunch</exclude>
-            <exclude>cloudera/**</exclude>
             </excludes>
           </configuration>
           <executions>
@@ -673,11 +542,42 @@ under the License.
               </goals>
             </execution>
           </executions>
+          <!-- workaround for Xerces warnings -->
+          <dependencies>
+            <dependency>
+              <groupId>org.apache.maven.doxia</groupId>
+              <artifactId>doxia-core</artifactId>
+              <version>1.6</version>
+              <exclusions>
+                <exclusion>
+                  <groupId>xerces</groupId>
+                  <artifactId>xercesImpl</artifactId>
+                </exclusion>
+              </exclusions>
+            </dependency>
+          </dependencies>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-checkstyle-plugin</artifactId>
+          <version>2.15</version>
+          <configuration>
+            <configLocation>src/main/config/checkstyle.xml</configLocation>
+          </configuration>
+          <executions>
+            <execution>
+              <id>validate</id>
+              <phase>validate</phase>
+              <goals>
+                <goal>check</goal>
+              </goals>
+            </execution>
+          </executions>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
-          <version>2.5.1</version>
+          <version>3.3</version>
           <configuration>
             <source>${java.source.version}</source>
             <target>${java.target.version}</target>
@@ -685,22 +585,58 @@ under the License.
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-javadoc-plugin</artifactId>
+          <version>2.10.3</version>
+          <configuration>
+            <show>public</show>
+            <nohelp>true</nohelp>
+            <excludePackageNames>${pkg}.hadoop.*:${pkg}.impl.mr.*:${pkg}.impl.mem.*:${pkg}.io.*:${pkg}.materialize:${pkg}.scrunch</excludePackageNames>
+            <groups>
+              <group>
+                <title>Core</title>
+                <packages>${pkg}:${pkg}.fn:${pkg}.impl.*:${pkg}.io:${pkg}.types:${pkg}.types.*:${pkg}.test:${pkg}.util</packages>
+              </group>
+              <group>
+                <title>Extension Library</title>
+                <packages>${pkg}.lib:${pkg}.lib.*</packages>
+              </group>
+              <group>
+                <title>User-contributed Functionality</title>
+                <packages>${pkg}.contrib:${pkg}.contrib.*</packages>
+              </group>
+              <group>
+                <title>Examples</title>
+                <packages>${pkg}.examples</packages>
+              </group>
+            </groups>
+            <!-- Prevents stricter javadoc 8 from failing the build for now -->
+            <additionalparam>-Xdoclint:none</additionalparam>
+          </configuration>
+          <executions>
+            <execution>
+              <id>aggregate</id>
+              <goals>
+                <goal>aggregate</goal>
+              </goals>
+              <phase>site</phase>
+            </execution>
+          </executions>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-assembly-plugin</artifactId>
-          <version>2.4</version>
+          <version>2.5.4</version>
         </plugin>
         <plugin>
           <groupId>net.alchim31.maven</groupId>
           <artifactId>scala-maven-plugin</artifactId>
-          <version>3.1.6</version>
+          <version>3.2.0</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
-          <version>2.12</version>
+          <version>2.18.1</version>
           <configuration>
-            <encoding>UTF-8</encoding>
-            <inputEncoding>UTF-8</inputEncoding>
-            <outputEncoding>UTF-8</outputEncoding>
             <argLine>-Xmx2G -XX:PermSize=512m -XX:MaxPermSize=1G -Dfile.encoding=UTF-8</argLine>
           </configuration>
         </plugin>
@@ -712,12 +648,12 @@ under the License.
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-dependency-plugin</artifactId>
-          <version>2.8</version>
+          <version>2.10</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-source-plugin</artifactId>
-          <version>2.1.2</version>
+          <version>2.4</version>
           <executions>
             <execution>
               <id>attach-sources</id>
@@ -731,6 +667,7 @@ under the License.
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-archetype-plugin</artifactId>
+          <!-- 2.3 seems to have a bug: "clean test" goals read as invalid "clean test\n" -->
           <version>2.2</version>
           <extensions>true</extensions>
         </plugin>
@@ -787,61 +724,6 @@ under the License.
             </lifecycleMappingMetadata>
           </configuration>
         </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-site-plugin</artifactId>
-          <version>3.1</version>
-          <dependencies>
-            <dependency>
-              <groupId>org.apache.maven.wagon</groupId>
-              <artifactId>wagon-ssh</artifactId>
-              <version>1.0</version>
-            </dependency>
-            <dependency>
-              <groupId>org.apache.maven.doxia</groupId>
-              <artifactId>doxia-module-markdown</artifactId>
-              <version>1.3</version>
-            </dependency>
-          </dependencies>
-          <configuration>
-            <inputEncoding>UTF-8</inputEncoding>
-            <outputEncoding>UTF-8</outputEncoding>
-            <reportPlugins>
-              <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>cobertura-maven-plugin</artifactId>
-                <version>2.5.1</version>
-              </plugin>
-              <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-checkstyle-plugin</artifactId>
-                <version>2.9.1</version>
-                <configuration>
-                  <configLocation>${project.parent.basedir}/src/main/config/checkstyle.xml</configLocation>
-                </configuration>   
-              </plugin>
-              <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.8.1</version> 
-                <configuration>
-                  <show>protected</show> 
-                  <nohelp>true</nohelp>
-                  <subpackages>org.apache.crunch;org.apache.crunch.fn</subpackages>
-                  <excludePackageNames>org.apache.crunch.impl.*</excludePackageNames>
-                </configuration>         
-                <reportSets>
-                  <reportSet>
-                    <id>generate-javadoc</id>
-                    <reports>
-                      <report>aggregate</report>
-                    </reports>
-                  </reportSet>
-                </reportSets>
-              </plugin>
-            </reportPlugins>
-          </configuration>
-        </plugin>
       <!-- We put slow-running tests into src/it and run them during the
            integration-test phase using the failsafe plugin. This way
            developers can run unit tests conveniently from the IDE or via
@@ -850,7 +732,7 @@ under the License.
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>build-helper-maven-plugin</artifactId>
-        <version>1.7</version>
+        <version>1.9.1</version>
         <executions>
           <execution>
             <id>add-source</id>
@@ -895,11 +777,8 @@ under the License.
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
-        <version>2.12</version>
+        <version>2.18.1</version>
         <configuration>
-          <encoding>UTF-8</encoding>
-          <inputEncoding>UTF-8</inputEncoding>
-          <outputEncoding>UTF-8</outputEncoding>
           <argLine>-Xmx1G -Dfile.encoding=UTF-8</argLine>
           <testSourceDirectory>${basedir}/src/it/java</testSourceDirectory>
         </configuration>
