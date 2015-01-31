@@ -21,7 +21,7 @@ import org.apache.crunch.io.FileReaderFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hbase.KeyValue;
+import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.io.hfile.CacheConfig;
 import org.apache.hadoop.hbase.io.hfile.HFile;
 import org.apache.hadoop.hbase.io.hfile.HFileScanner;
@@ -29,13 +29,13 @@ import org.apache.hadoop.hbase.io.hfile.HFileScanner;
 import java.io.IOException;
 import java.util.Iterator;
 
-public class HFileReaderFactory implements FileReaderFactory<KeyValue> {
+public class HFileReaderFactory implements FileReaderFactory<Cell> {
 
   public static final String HFILE_SCANNER_CACHE_BLOCKS = "crunch.hfile.scanner.cache.blocks";
   public static final String HFILE_SCANNER_PREAD = "crunch.hfile.scanner.pread";
 
   @Override
-  public Iterator<KeyValue> read(FileSystem fs, Path path) {
+  public Iterator<Cell> read(FileSystem fs, Path path) {
     Configuration conf = fs.getConf();
     CacheConfig cacheConfig = new CacheConfig(conf);
     try {
@@ -50,10 +50,10 @@ public class HFileReaderFactory implements FileReaderFactory<KeyValue> {
     }
   }
 
-  private static class HFileIterator implements Iterator<KeyValue> {
+  private static class HFileIterator implements Iterator<Cell> {
 
     private final HFileScanner scanner;
-    private KeyValue curr;
+    private Cell curr;
 
     public HFileIterator(HFileScanner scanner) {
       this.scanner = scanner;
@@ -66,8 +66,8 @@ public class HFileReaderFactory implements FileReaderFactory<KeyValue> {
     }
 
     @Override
-    public KeyValue next() {
-      KeyValue ret = curr;
+    public Cell next() {
+      Cell ret = curr;
       try {
         if (scanner.next()) {
           curr = scanner.getKeyValue();

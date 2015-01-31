@@ -33,6 +33,7 @@ import org.apache.crunch.test.TemporaryPaths;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.Scan;
@@ -91,10 +92,10 @@ public class HFileSourceIT implements Serializable {
     writeKeyValuesToHFile(inputPath, kvs);
 
     Pipeline pipeline = new MRPipeline(HFileSourceIT.class, conf);
-    PCollection<KeyValue> in = pipeline.read(FromHBase.hfile(inputPath));
-    PCollection<String> texts = in.parallelDo(new MapFn<KeyValue, String>() {
+    PCollection<Cell> in = pipeline.read(FromHBase.hfile(inputPath));
+    PCollection<String> texts = in.parallelDo(new MapFn<Cell, String>() {
       @Override
-      public String map(KeyValue input) {
+      public String map(Cell input) {
         return input.toString();
       }
     }, strings());
@@ -275,12 +276,12 @@ public class HFileSourceIT implements Serializable {
     return ImmutableList.copyOf(results.materialize());
   }
 
-  private List<KeyValue> doTestReadHFiles(List<KeyValue> kvs, Scan scan) throws IOException {
+  private List<Cell> doTestReadHFiles(List<KeyValue> kvs, Scan scan) throws IOException {
     Path inputPath = tmpDir.getPath("in");
     writeKeyValuesToHFile(inputPath, kvs);
 
     Pipeline pipeline = new MRPipeline(HFileSourceIT.class, conf);
-    PCollection<KeyValue> results = pipeline.read(FromHBase.hfile(inputPath));
+    PCollection<Cell> results = pipeline.read(FromHBase.hfile(inputPath));
     return ImmutableList.copyOf(results.materialize());
   }
 

@@ -88,12 +88,6 @@ under the License.
 
     <dependency>
       <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase-${hbase.midfix}-compat</artifactId>
-      <scope>provided</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.hbase</groupId>
       <artifactId>hbase-testing-util</artifactId>
       <scope>provided</scope>
     </dependency>

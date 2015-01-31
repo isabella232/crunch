@@ -115,7 +115,6 @@ under the License.
     <!-- Can be overridden by hadoop-2 profile, but these are the default values -->
     <hadoop.version>1.1.2</hadoop.version>
     <hbase.version>0.98.1-hadoop1</hbase.version>
-    <hbase.midfix>hadoop1</hbase.midfix>
     <avro.classifier>hadoop1</avro.classifier>
 
     <scala.base.version>2.10</scala.base.version>
@@ -374,12 +373,6 @@ under the License.
 
       <dependency>
         <groupId>org.apache.hbase</groupId>
-        <artifactId>hbase-${hbase.midfix}-compat</artifactId>
-        <version>${hbase.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.apache.hbase</groupId>
         <artifactId>hbase-testing-util</artifactId>
         <version>${hbase.version}</version>
       </dependency>
@@ -519,7 +512,6 @@ under the License.
         <hbase.version>${cdh.hbase.version}</hbase.version>
         <commons-lang.version>2.5</commons-lang.version>
         <slf4j.version>${cdh.slf4j.version}</slf4j.version>
-        <hbase.midfix>hadoop2</hbase.midfix>
         <avro.hadoop.classifier>hadoop2</avro.hadoop.classifier>
       </properties>
       <dependencyManagement>

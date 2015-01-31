@@ -20,18 +20,18 @@ package org.apache.crunch.io.hbase;
 import org.apache.crunch.io.FileReaderFactory;
 import org.apache.crunch.io.impl.ReadableDataImpl;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hbase.KeyValue;
+import org.apache.hadoop.hbase.Cell;
 
 import java.util.List;
 
-public class HFileReadableData extends ReadableDataImpl<KeyValue> {
+public class HFileReadableData extends ReadableDataImpl<Cell> {
 
   public HFileReadableData(List<Path> paths) {
     super(paths);
   }
 
   @Override
-  protected FileReaderFactory<KeyValue> getFileReaderFactory() {
+  protected FileReaderFactory<Cell> getFileReaderFactory() {
     return new HFileReaderFactory();
   }
 }

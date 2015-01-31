@@ -34,7 +34,6 @@ import org.apache.crunch.PipelineResult;
 import org.apache.crunch.fn.FilterFns;
 import org.apache.crunch.impl.mr.MRPipeline;
 import org.apache.crunch.io.At;
-import org.apache.crunch.lib.Sort;
 import org.apache.crunch.test.TemporaryPath;
 import org.apache.crunch.test.TemporaryPaths;
 import org.apache.crunch.types.writable.Writables;
@@ -42,6 +41,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hbase.Cell;
+import org.apache.hadoop.hbase.CellUtil;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HBaseTestingUtility;
 import org.apache.hadoop.hbase.HColumnDescriptor;
@@ -169,8 +170,8 @@ public class HFileTargetIT implements Serializable {
     assertTrue(result.succeeded());
 
     FileSystem fs = FileSystem.get(HBASE_TEST_UTILITY.getConfiguration());
-    KeyValue kv = readFromHFiles(fs, outputPath, "and");
-    assertEquals(427L, Bytes.toLong(kv.getValue()));
+    Cell cell = readFromHFiles(fs, outputPath, "and");
+    assertEquals(427L, Bytes.toLong(cell.getValueArray(), cell.getValueOffset(), cell.getValueLength()));
   }
 
   @Test
@@ -305,18 +306,19 @@ public class HFileTargetIT implements Serializable {
     }, HBaseTypes.puts());
   }
 
-  private static PCollection<KeyValue> convertToKeyValues(PTable<String, Long> in) {
-    return in.parallelDo(new MapFn<Pair<String, Long>, Pair<KeyValue, Void>>() {
+  private static PCollection<Cell> convertToKeyValues(PTable<String, Long> in) {
+    return in.parallelDo(new MapFn<Pair<String, Long>, Pair<Cell, Void>>() {
       @Override
-      public Pair<KeyValue, Void> map(Pair<String, Long> input) {
+      public Pair<Cell, Void> map(Pair<String, Long> input) {
         String w = input.first();
         if (w.length() == 0) {
           w = "__EMPTY__";
         }
         long c = input.second();
-        return Pair.of(new KeyValue(Bytes.toBytes(w), TEST_FAMILY, TEST_QUALIFIER, Bytes.toBytes(c)), null);
+        Cell cell = CellUtil.createCell(Bytes.toBytes(w), Bytes.toBytes(c));
+        return Pair.of(cell, null);
       }
-    }, tableOf(HBaseTypes.keyValues(), nulls()))
+    }, tableOf(HBaseTypes.cells(), nulls()))
         .groupByKey(GroupingOptions.builder()
             .sortComparatorClass(HFileUtils.KeyValueComparator.class)
             .build())
@@ -336,7 +338,7 @@ public class HFileTargetIT implements Serializable {
   }
 
   /** Reads the first value on a given row from a bunch of hfiles. */
-  private static KeyValue readFromHFiles(FileSystem fs, Path mrOutputPath, String row) throws IOException {
+  private static Cell readFromHFiles(FileSystem fs, Path mrOutputPath, String row) throws IOException {
     List<KeyValueScanner> scanners = Lists.newArrayList();
     KeyValue fakeKV = KeyValue.createFirstOnRow(Bytes.toBytes(row));
     for (FileStatus e : fs.listStatus(mrOutputPath)) {
@@ -357,7 +359,7 @@ public class HFileTargetIT implements Serializable {
     KeyValueScanner kvh = new KeyValueHeap(scanners, KeyValue.COMPARATOR);
     boolean seekOk = kvh.seek(fakeKV);
     assertTrue(seekOk);
-    KeyValue kv = kvh.next();
+    Cell kv = kvh.next();
     kvh.close();
     return kv;
   }
@@ -388,11 +390,11 @@ public class HFileTargetIT implements Serializable {
 
   private static long getWordCountFromTable(HTable table, String word) throws IOException {
     Get get = new Get(Bytes.toBytes(word));
-    KeyValue keyValue = table.get(get).getColumnLatest(TEST_FAMILY, TEST_QUALIFIER);
-    if (keyValue == null) {
+    byte[] value = table.get(get).value();
+    if (value == null) {
       fail("no such row: " +  word);
     }
-    return Bytes.toLong(keyValue.getValue());
+    return Bytes.toLong(value);
   }
 }
 

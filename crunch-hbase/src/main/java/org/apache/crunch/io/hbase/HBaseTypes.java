@@ -19,15 +19,18 @@
  */
 package org.apache.crunch.io.hbase;
 
+import com.google.common.collect.ImmutableList;
+
 import org.apache.crunch.CrunchRuntimeException;
 import org.apache.crunch.MapFn;
 import org.apache.crunch.types.PType;
 import org.apache.crunch.types.writable.Writables;
+import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.KeyValue;
+import org.apache.hadoop.hbase.Tag;
 import org.apache.hadoop.hbase.client.Delete;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
-import org.apache.hadoop.hbase.mapreduce.KeyValueSerialization;
 import org.apache.hadoop.hbase.mapreduce.MutationSerialization;
 import org.apache.hadoop.hbase.mapreduce.ResultSerialization;
 import org.apache.hadoop.io.BytesWritable;
@@ -66,39 +69,40 @@ public final class HBaseTypes {
         Writables.bytes());
   }
 
-  public static final PType<KeyValue> keyValues() {
-    return Writables.derived(KeyValue.class,
-        new MapFn<BytesWritable, KeyValue>() {
+  public static final PType<Cell> cells() {
+    return Writables.derived(Cell.class,
+        new MapFn<BytesWritable, Cell>() {
           @Override
-          public KeyValue map(BytesWritable input) {
+          public Cell map(BytesWritable input) {
             return bytesToKeyValue(input);
           }
         },
-        new MapFn<KeyValue, BytesWritable>() {
+        new MapFn<Cell, BytesWritable>() {
           @Override
-          public BytesWritable map(KeyValue input) {
+          public BytesWritable map(Cell input) {
             return keyValueToBytes(input);
           }
         },
         Writables.writables(BytesWritable.class));
   }
 
-  public static BytesWritable keyValueToBytes(KeyValue input) {
+  public static BytesWritable keyValueToBytes(Cell input) {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     DataOutputStream dos = new DataOutputStream(baos);
     try {
-      KeyValue.write(input, dos);
-    } catch (IOException e) {
+      KeyValue kv = KeyValue.cloneAndAddTags(input, ImmutableList.<Tag>of());
+      KeyValue.write(kv, dos);
+      return new BytesWritable(baos.toByteArray());
+    } catch (Exception e) {
       throw new CrunchRuntimeException(e);
     }
-    return new BytesWritable(baos.toByteArray());
   }
 
-  public static KeyValue bytesToKeyValue(BytesWritable input) {
+  public static Cell bytesToKeyValue(BytesWritable input) {
     return bytesToKeyValue(input.getBytes(), 0, input.getLength());
   }
 
-  public static KeyValue bytesToKeyValue(byte[] array, int offset, int limit) {
+  public static Cell bytesToKeyValue(byte[] array, int offset, int limit) {
     ByteArrayInputStream bais = new ByteArrayInputStream(array, offset, limit);
     DataInputStream dis = new DataInputStream(bais);
     try {
