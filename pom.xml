@@ -81,8 +81,8 @@ under the License.
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <java.source.version>1.6</java.source.version>
-    <java.target.version>1.6</java.target.version>
+    <java.source.version>1.7</java.source.version>
+    <java.target.version>1.7</java.target.version>
     <!--
         NOTE: Please don't change any dependency versions here without
               checking first that they match those on Hadoop's runtime
