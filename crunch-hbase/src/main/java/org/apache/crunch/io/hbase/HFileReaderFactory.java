@@ -17,11 +17,13 @@
  */
 package org.apache.crunch.io.hbase;
 
+import com.google.common.collect.ImmutableList;
 import org.apache.crunch.io.FileReaderFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hbase.Cell;
+import org.apache.hadoop.hbase.KeyValue;
+import org.apache.hadoop.hbase.Tag;
 import org.apache.hadoop.hbase.io.hfile.CacheConfig;
 import org.apache.hadoop.hbase.io.hfile.HFile;
 import org.apache.hadoop.hbase.io.hfile.HFileScanner;
@@ -29,13 +31,13 @@ import org.apache.hadoop.hbase.io.hfile.HFileScanner;
 import java.io.IOException;
 import java.util.Iterator;
 
-public class HFileReaderFactory implements FileReaderFactory<Cell> {
+public class HFileReaderFactory implements FileReaderFactory<KeyValue> {
 
   public static final String HFILE_SCANNER_CACHE_BLOCKS = "crunch.hfile.scanner.cache.blocks";
   public static final String HFILE_SCANNER_PREAD = "crunch.hfile.scanner.pread";
 
   @Override
-  public Iterator<Cell> read(FileSystem fs, Path path) {
+  public Iterator<KeyValue> read(FileSystem fs, Path path) {
     Configuration conf = fs.getConf();
     CacheConfig cacheConfig = new CacheConfig(conf);
     try {
@@ -50,14 +52,14 @@ public class HFileReaderFactory implements FileReaderFactory<Cell> {
     }
   }
 
-  private static class HFileIterator implements Iterator<Cell> {
+  private static class HFileIterator implements Iterator<KeyValue> {
 
     private final HFileScanner scanner;
-    private Cell curr;
+    private KeyValue curr;
 
     public HFileIterator(HFileScanner scanner) {
       this.scanner = scanner;
-      this.curr = scanner.getKeyValue();
+      this.curr = KeyValue.cloneAndAddTags(scanner.getKeyValue(), ImmutableList.<Tag>of());
     }
 
     @Override
@@ -66,11 +68,11 @@ public class HFileReaderFactory implements FileReaderFactory<Cell> {
     }
 
     @Override
-    public Cell next() {
-      Cell ret = curr;
+    public KeyValue next() {
+      KeyValue ret = curr;
       try {
         if (scanner.next()) {
-          curr = scanner.getKeyValue();
+          curr = KeyValue.cloneAndAddTags(scanner.getKeyValue(), ImmutableList.<Tag>of());
         } else {
           curr = null;
         }

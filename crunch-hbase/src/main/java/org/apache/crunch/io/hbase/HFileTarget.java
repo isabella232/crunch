@@ -68,7 +68,7 @@ public class HFileTarget extends FileTargetImpl {
     if (ptype instanceof PTableType) {
       valueType = ((PTableType) ptype).getValueType();
     }
-    if (!Cell.class.equals(valueType.getTypeClass())) {
+    if (!Cell.class.isAssignableFrom(valueType.getTypeClass())) {
       throw new IllegalArgumentException("HFileTarget only supports Cell outputs");
     }
     if (ptype instanceof PTableType) {

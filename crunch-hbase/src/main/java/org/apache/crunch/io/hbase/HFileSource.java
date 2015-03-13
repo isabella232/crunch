@@ -35,7 +35,7 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HConstants;
-import org.apache.hadoop.hbase.Cell;
+import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.mapreduce.KeyValueSerialization;
 import org.apache.hadoop.hbase.mapreduce.MutationSerialization;
@@ -46,10 +46,10 @@ import org.apache.hadoop.mapreduce.Job;
 import java.io.IOException;
 import java.util.List;
 
-public class HFileSource extends FileSourceImpl<Cell> implements ReadableSource<Cell> {
+public class HFileSource extends FileSourceImpl<KeyValue> implements ReadableSource<KeyValue> {
 
   private static final Log LOG = LogFactory.getLog(HFileSource.class);
-  private static final PType<Cell> CELL_PTYPE = HBaseTypes.cells();
+  private static final PType<KeyValue> KEY_VALUE_PTYPE = HBaseTypes.keyValues();
 
   public HFileSource(Path path) {
     this(ImmutableList.of(path));
@@ -62,7 +62,7 @@ public class HFileSource extends FileSourceImpl<Cell> implements ReadableSource<
   // Package-local. Don't want it to be too open, because we only support limited filters yet
   // (namely start/stop row). Users who need advanced filters should use HFileUtils#scanHFiles.
   HFileSource(List<Path> paths, Scan scan) {
-    super(paths, CELL_PTYPE, createInputFormatBundle(scan)
+    super(paths, KEY_VALUE_PTYPE, createInputFormatBundle(scan)
         // "combine file" is not supported by HFileInputFormat, as it overrides listStatus().
         .set(RuntimeParameters.DISABLE_COMBINE_FILE, "true"));
   }
@@ -89,7 +89,7 @@ public class HFileSource extends FileSourceImpl<Cell> implements ReadableSource<
   }
 
   @Override
-  public Iterable<Cell> read(Configuration conf) throws IOException {
+  public Iterable<KeyValue> read(Configuration conf) throws IOException {
     conf = new Configuration(conf);
     inputBundle.configure(conf);
     if (conf.get(HFileInputFormat.START_ROW_KEY) != null ||
@@ -100,12 +100,12 @@ public class HFileSource extends FileSourceImpl<Cell> implements ReadableSource<
   }
 
   @Override
-  public ReadableData<Cell> asReadable() {
+  public ReadableData<KeyValue> asReadable() {
     return new HFileReadableData(paths);
   }
 
   public Converter<?, ?, ?, ?> getConverter() {
-    return new HBaseValueConverter<Cell>(Cell.class);
+    return new HBaseValueConverter<KeyValue>(KeyValue.class);
   }
 
   @Override

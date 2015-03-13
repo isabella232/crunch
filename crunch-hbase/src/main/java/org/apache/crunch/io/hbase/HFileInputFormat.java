@@ -17,6 +17,7 @@
  */
 package org.apache.crunch.io.hbase;
 
+import com.google.common.collect.ImmutableList;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.logging.Log;
@@ -30,6 +31,7 @@ import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.CellUtil;
 import org.apache.hadoop.hbase.KeyValue;
+import org.apache.hadoop.hbase.Tag;
 import org.apache.hadoop.hbase.fs.HFileSystem;
 import org.apache.hadoop.hbase.io.encoding.DataBlockEncoding;
 import org.apache.hadoop.hbase.io.hfile.CacheConfig;
@@ -54,7 +56,7 @@ import java.util.List;
 /**
  * Simple input format for HFiles.
  */
-public class HFileInputFormat extends FileInputFormat<NullWritable, Cell> {
+public class HFileInputFormat extends FileInputFormat<NullWritable, KeyValue> {
 
   private static final Log LOG = LogFactory.getLog(HFileInputFormat.class);
   static final String START_ROW_KEY = "crunch.hbase.hfile.input.format.start.row";
@@ -75,7 +77,7 @@ public class HFileInputFormat extends FileInputFormat<NullWritable, Cell> {
   /**
    * Record reader for HFiles.
    */
-  private static class HFileRecordReader extends RecordReader<NullWritable, Cell> {
+  private static class HFileRecordReader extends RecordReader<NullWritable, KeyValue> {
 
     private Reader in;
     protected Configuration conf;
@@ -84,7 +86,7 @@ public class HFileInputFormat extends FileInputFormat<NullWritable, Cell> {
     /**
      * A private cache of the key value so it doesn't need to be loaded twice from the scanner.
      */
-    private Cell value = null;
+    private KeyValue value = null;
     private byte[] startRow = null;
     private byte[] stopRow = null;
     private boolean reachedStopRow = false;
@@ -145,7 +147,7 @@ public class HFileInputFormat extends FileInputFormat<NullWritable, Cell> {
       if (!hasNext) {
         return false;
       }
-      value = scanner.getKeyValue();
+      value = KeyValue.cloneAndAddTags(scanner.getKeyValue(), ImmutableList.<Tag>of());
       if (stopRow != null && Bytes.compareTo(CellUtil.cloneRow(value), stopRow) >= 0) {
         LOG.info("Reached stop row " + Bytes.toStringBinary(stopRow));
         reachedStopRow = true;
@@ -162,7 +164,7 @@ public class HFileInputFormat extends FileInputFormat<NullWritable, Cell> {
     }
 
     @Override
-    public Cell getCurrentValue() throws IOException, InterruptedException {
+    public KeyValue getCurrentValue() throws IOException, InterruptedException {
       return value;
     }
 
@@ -218,7 +220,7 @@ public class HFileInputFormat extends FileInputFormat<NullWritable, Cell> {
   }
 
   @Override
-  public RecordReader<NullWritable, Cell> createRecordReader(InputSplit split, TaskAttemptContext context)
+  public RecordReader<NullWritable, KeyValue> createRecordReader(InputSplit split, TaskAttemptContext context)
       throws IOException, InterruptedException {
     return new HFileRecordReader();
   }

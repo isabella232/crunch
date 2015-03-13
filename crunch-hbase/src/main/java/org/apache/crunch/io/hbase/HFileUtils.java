@@ -24,7 +24,6 @@ import static org.apache.crunch.types.writable.Writables.tableOf;
 import java.io.IOException;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -117,7 +116,7 @@ public final class HFileUtils {
 
   };
 
-  private static class FilterByFamilyFn extends FilterFn<Cell> {
+  private static class FilterByFamilyFn<C extends Cell> extends FilterFn<C> {
 
     private final byte[] family;
 
@@ -126,12 +125,12 @@ public final class HFileUtils {
     }
 
     @Override
-    public boolean accept(Cell input) {
+    public boolean accept(C input) {
       return Bytes.equals(CellUtil.cloneFamily(input), family);
     }
   }
 
-  private static class StartRowFilterFn extends FilterFn<Cell> {
+  private static class StartRowFilterFn<C extends Cell> extends FilterFn<C> {
 
     private final byte[] startRow;
 
@@ -140,12 +139,12 @@ public final class HFileUtils {
     }
 
     @Override
-    public boolean accept(Cell input) {
+    public boolean accept(C input) {
       return Bytes.compareTo(CellUtil.cloneRow(input), startRow) >= 0;
     }
   }
 
-  private static class StopRowFilterFn extends FilterFn<Cell> {
+  private static class StopRowFilterFn<C extends Cell> extends FilterFn<C> {
 
     private final byte[] stopRow;
 
@@ -154,12 +153,12 @@ public final class HFileUtils {
     }
 
     @Override
-    public boolean accept(Cell input) {
+    public boolean accept(C input) {
       return Bytes.compareTo(CellUtil.cloneRow(input), stopRow) < 0;
     }
   }
 
-  private static class FamilyMapFilterFn extends FilterFn<Cell> {
+  private static class FamilyMapFilterFn<C extends Cell> extends FilterFn<C> {
 
     private static class Column implements Serializable {
 
@@ -218,14 +217,14 @@ public final class HFileUtils {
     }
 
     @Override
-    public boolean accept(Cell input) {
+    public boolean accept(C input) {
       ByteBuffer f = ByteBuffer.wrap(CellUtil.cloneFamily(input));
       ByteBuffer q = ByteBuffer.wrap(CellUtil.cloneQualifier(input));
       return familySet.contains(f) || qualifierSet.contains(Pair.of(f, q));
     }
   }
 
-  private static class TimeRangeFilterFn extends FilterFn<Cell> {
+  private static class TimeRangeFilterFn<C extends Cell> extends FilterFn<C> {
 
     private final long minTimestamp;
     private final long maxTimestamp;
@@ -237,7 +236,7 @@ public final class HFileUtils {
     }
 
     @Override
-    public boolean accept(Cell input) {
+    public boolean accept(C input) {
       return (minTimestamp <= input.getTimestamp() && input.getTimestamp() < maxTimestamp);
     }
   }
@@ -275,13 +274,13 @@ public final class HFileUtils {
     }
   }
 
-  private static final MapFn<Cell, ByteBuffer> EXTRACT_ROW_FN = new MapFn<Cell, ByteBuffer>() {
+  private static class ExtractRowFn<C extends Cell> extends MapFn<C, ByteBuffer> {
     @Override
     public ByteBuffer map(Cell input) {
       // we have to make a copy of row, because the buffer may be changed after this call
       return ByteBuffer.wrap(CellUtil.cloneRow(input));
     }
-  };
+  }
 
   public static PCollection<Result> scanHFiles(Pipeline pipeline, Path path) {
     return scanHFiles(pipeline, path, new Scan());
@@ -301,11 +300,11 @@ public final class HFileUtils {
   }
 
   public static PCollection<Result> scanHFiles(Pipeline pipeline, List<Path> paths, Scan scan) {
-      PCollection<Cell> in = pipeline.read(new HFileSource(paths, scan));
+      PCollection<KeyValue> in = pipeline.read(new HFileSource(paths, scan));
       return combineIntoRow(in, scan);
   }
 
-  public static PCollection<Result> combineIntoRow(PCollection<Cell> cells) {
+  public static <C extends Cell> PCollection<Result> combineIntoRow(PCollection<C> cells) {
     return combineIntoRow(cells, new Scan());
   }
 
@@ -320,30 +319,30 @@ public final class HFileUtils {
    * @param scan filter conditions, currently we support start row, stop row and family map
    * @return {@code Result}s
    */
-  public static PCollection<Result> combineIntoRow(PCollection<Cell> cells, Scan scan) {
+  public static <C extends Cell> PCollection<Result> combineIntoRow(PCollection<C> cells, Scan scan) {
     if (!Bytes.equals(scan.getStartRow(), HConstants.EMPTY_START_ROW)) {
-      cells = cells.filter(new StartRowFilterFn(scan.getStartRow()));
+      cells = cells.filter(new StartRowFilterFn<C>(scan.getStartRow()));
     }
     if (!Bytes.equals(scan.getStopRow(), HConstants.EMPTY_END_ROW)) {
-      cells = cells.filter(new StopRowFilterFn(scan.getStopRow()));
+      cells = cells.filter(new StopRowFilterFn<C>(scan.getStopRow()));
     }
     if (scan.hasFamilies()) {
-      cells = cells.filter(new FamilyMapFilterFn(scan.getFamilyMap()));
+      cells = cells.filter(new FamilyMapFilterFn<C>(scan.getFamilyMap()));
     }
     TimeRange timeRange = scan.getTimeRange();
     if (timeRange != null && (timeRange.getMin() > 0 || timeRange.getMax() < Long.MAX_VALUE)) {
-      cells = cells.filter(new TimeRangeFilterFn(timeRange));
+      cells = cells.filter(new TimeRangeFilterFn<C>(timeRange));
     }
     // TODO(chaoshi): support Scan#getFilter
 
-    PTable<ByteBuffer, Cell> cellsByRow = cells.by(EXTRACT_ROW_FN, bytes());
+    PTable<ByteBuffer, C> cellsByRow = cells.by(new ExtractRowFn<C>(), bytes());
     final int versions = scan.getMaxVersions();
     return cellsByRow.groupByKey().parallelDo("CombineCellsIntoRow",
-        new DoFn<Pair<ByteBuffer, Iterable<Cell>>, Result>() {
+        new DoFn<Pair<ByteBuffer, Iterable<C>>, Result>() {
           @Override
-          public void process(Pair<ByteBuffer, Iterable<Cell>> input, Emitter<Result> emitter) {
+          public void process(Pair<ByteBuffer, Iterable<C>> input, Emitter<Result> emitter) {
             List<KeyValue> cells = Lists.newArrayList();
-            for (Cell cell : input.second()) {
+            for (C cell : input.second()) {
               try {
                 cells.add(KeyValue.cloneAndAddTags(cell, ImmutableList.<Tag>of())); // assuming the input fits into memory
               } catch (Exception e) {
@@ -359,8 +358,8 @@ public final class HFileUtils {
         }, HBaseTypes.results());
   }
 
-  public static void writeToHFilesForIncrementalLoad(
-      PCollection<Cell> cells,
+  public static <C extends Cell> void writeToHFilesForIncrementalLoad(
+      PCollection<C> cells,
       HTable table,
       Path outputPath) throws IOException {
     HColumnDescriptor[] families = table.getTableDescriptor().getColumnFamilies();
@@ -370,7 +369,7 @@ public final class HFileUtils {
     }
     for (HColumnDescriptor f : families) {
       byte[] family = f.getName();
-      PCollection<Cell> sorted = sortAndPartition(cells.filter(new FilterByFamilyFn(family)), table);
+      PCollection<C> sorted = sortAndPartition(cells.filter(new FilterByFamilyFn<C>(family)), table);
       sorted.write(new HFileTarget(new Path(outputPath, Bytes.toString(family)), f));
     }
   }
@@ -390,14 +389,14 @@ public final class HFileUtils {
     writeToHFilesForIncrementalLoad(cells, table, outputPath);
   }
 
-  public static PCollection<Cell> sortAndPartition(PCollection<Cell> cells, HTable table) throws IOException {
+  public static <C extends Cell> PCollection<C> sortAndPartition(PCollection<C> cells, HTable table) throws IOException {
     Configuration conf = cells.getPipeline().getConfiguration();
-    PTable<Cell, Void> t = cells.parallelDo(new MapFn<Cell, Pair<Cell, Void>>() {
+    PTable<C, Void> t = cells.parallelDo(new MapFn<C, Pair<C, Void>>() {
       @Override
-      public Pair<Cell, Void> map(Cell input) {
+      public Pair<C, Void> map(C input) {
         return Pair.of(input, (Void) null);
       }
-    }, tableOf(HBaseTypes.cells(), nulls()));
+    }, tableOf(cells.getPType(), nulls()));
     List<KeyValue> splitPoints = getSplitPoints(table);
     Path partitionFile = new Path(((DistributedPipeline) cells.getPipeline()).createTempPath(), "partition");
     writePartitionInfo(conf, partitionFile, splitPoints);
