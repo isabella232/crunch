@@ -1,21 +1,19 @@
-/*
- * *
- *  * Licensed to the Apache Software Foundation (ASF) under one
- *  * or more contributor license agreements.  See the NOTICE file
- *  * distributed with this work for additional information
- *  * regarding copyright ownership.  The ASF licenses this file
- *  * to you under the Apache License, Version 2.0 (the
- *  * "License"); you may not use this file except in compliance
- *  * with the License.  You may obtain a copy of the License at
- *  *
- *  *     http://www.apache.org/licenses/LICENSE-2.0
- *  *
- *  * Unless required by applicable law or agreed to in writing, software
- *  * distributed under the License is distributed on an "AS IS" BASIS,
- *  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  * See the License for the specific language governing permissions and
- *  * limitations under the License.
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.apache.crunch.io.hbase;
 
@@ -69,6 +67,23 @@ public final class HBaseTypes {
         Writables.bytes());
   }
 
+  public static final PType<KeyValue> keyValues() {
+    return Writables.derived(KeyValue.class,
+        new MapFn<BytesWritable, KeyValue>() {
+          @Override
+          public KeyValue map(BytesWritable input) {
+            return bytesToKeyValue(input);
+          }
+        },
+        new MapFn<KeyValue, BytesWritable>() {
+          @Override
+          public BytesWritable map(KeyValue input) {
+            return keyValueToBytes(input);
+          }
+        },
+        Writables.writables(BytesWritable.class));
+  }
+
   public static final PType<Cell> cells() {
     return Writables.derived(Cell.class,
         new MapFn<BytesWritable, Cell>() {
@@ -87,10 +102,13 @@ public final class HBaseTypes {
   }
 
   public static BytesWritable keyValueToBytes(Cell input) {
+    return keyValueToBytes(KeyValue.cloneAndAddTags(input, ImmutableList.<Tag>of()));
+  }
+
+  public static BytesWritable keyValueToBytes(KeyValue kv) {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     DataOutputStream dos = new DataOutputStream(baos);
     try {
-      KeyValue kv = KeyValue.cloneAndAddTags(input, ImmutableList.<Tag>of());
       KeyValue.write(kv, dos);
       return new BytesWritable(baos.toByteArray());
     } catch (Exception e) {
@@ -98,11 +116,11 @@ public final class HBaseTypes {
     }
   }
 
-  public static Cell bytesToKeyValue(BytesWritable input) {
+  public static KeyValue bytesToKeyValue(BytesWritable input) {
     return bytesToKeyValue(input.getBytes(), 0, input.getLength());
   }
 
-  public static Cell bytesToKeyValue(byte[] array, int offset, int limit) {
+  public static KeyValue bytesToKeyValue(byte[] array, int offset, int limit) {
     ByteArrayInputStream bais = new ByteArrayInputStream(array, offset, limit);
     DataInputStream dis = new DataInputStream(bais);
     try {

@@ -17,6 +17,7 @@
  */
 package org.apache.crunch.io.hbase;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
@@ -48,6 +49,7 @@ import org.apache.hadoop.hbase.HBaseTestingUtility;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.KeyValue;
+import org.apache.hadoop.hbase.Tag;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HTable;
@@ -170,8 +172,8 @@ public class HFileTargetIT implements Serializable {
     assertTrue(result.succeeded());
 
     FileSystem fs = FileSystem.get(HBASE_TEST_UTILITY.getConfiguration());
-    Cell cell = readFromHFiles(fs, outputPath, "and");
-    assertEquals(427L, Bytes.toLong(cell.getValueArray(), cell.getValueOffset(), cell.getValueLength()));
+    KeyValue kv = readFromHFiles(fs, outputPath, "and");
+    assertEquals(427L, Bytes.toLong(kv.getValue()));
   }
 
   @Test
@@ -306,19 +308,19 @@ public class HFileTargetIT implements Serializable {
     }, HBaseTypes.puts());
   }
 
-  private static PCollection<Cell> convertToKeyValues(PTable<String, Long> in) {
-    return in.parallelDo(new MapFn<Pair<String, Long>, Pair<Cell, Void>>() {
+  private static PCollection<KeyValue> convertToKeyValues(PTable<String, Long> in) {
+    return in.parallelDo(new MapFn<Pair<String, Long>, Pair<KeyValue, Void>>() {
       @Override
-      public Pair<Cell, Void> map(Pair<String, Long> input) {
+      public Pair<KeyValue, Void> map(Pair<String, Long> input) {
         String w = input.first();
         if (w.length() == 0) {
           w = "__EMPTY__";
         }
         long c = input.second();
         Cell cell = CellUtil.createCell(Bytes.toBytes(w), Bytes.toBytes(c));
-        return Pair.of(cell, null);
+        return Pair.of(KeyValue.cloneAndAddTags(cell, ImmutableList.<Tag>of()), null);
       }
-    }, tableOf(HBaseTypes.cells(), nulls()))
+    }, tableOf(HBaseTypes.keyValues(), nulls()))
         .groupByKey(GroupingOptions.builder()
             .sortComparatorClass(HFileUtils.KeyValueComparator.class)
             .build())
@@ -338,7 +340,7 @@ public class HFileTargetIT implements Serializable {
   }
 
   /** Reads the first value on a given row from a bunch of hfiles. */
-  private static Cell readFromHFiles(FileSystem fs, Path mrOutputPath, String row) throws IOException {
+  private static KeyValue readFromHFiles(FileSystem fs, Path mrOutputPath, String row) throws IOException {
     List<KeyValueScanner> scanners = Lists.newArrayList();
     KeyValue fakeKV = KeyValue.createFirstOnRow(Bytes.toBytes(row));
     for (FileStatus e : fs.listStatus(mrOutputPath)) {
@@ -361,7 +363,7 @@ public class HFileTargetIT implements Serializable {
     assertTrue(seekOk);
     Cell kv = kvh.next();
     kvh.close();
-    return kv;
+    return KeyValue.cloneAndAddTags(kv, ImmutableList.<Tag>of());
   }
 
   private static Path copyResourceFileToHDFS(String resourceName) throws IOException {
