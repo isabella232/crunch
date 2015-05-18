@@ -245,7 +245,7 @@ trait PTypeFamily extends GeneratedTuplePTypeFamily {
     val out = (x: Product) => TupleN.of(x.productIterator.toArray.asInstanceOf[Array[Object]] : _*)
     val rtc = currentMirror.runtimeClass(tpe)
     val base = namedTuples(rtc.getCanonicalName + "_", args)
-    ptf.derived(classOf[Product], new TypeMapFn(rtc), new TMapFn[Product, TupleN](out), base)
+    ptf.derived(classOf[Product], new TypeMapFn[Product](rtc), new TMapFn[Product, TupleN](out), base)
       .asInstanceOf[PType[T]]
   }
 
