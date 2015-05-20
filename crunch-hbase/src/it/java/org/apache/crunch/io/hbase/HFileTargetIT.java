@@ -75,6 +75,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Serializable;
+import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -115,7 +116,7 @@ public class HFileTargetIT implements Serializable {
     // probably created using this process' umask. So we guess the temp dir permissions as
     // 0777 & ~umask, and use that to set the config value.
     Process process = Runtime.getRuntime().exec("/bin/sh -c umask");
-    BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
+    BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream(), Charset.forName("UTF-8")));
     int rc = process.waitFor();
     if(rc == 0) {
       String umask = br.readLine();
@@ -285,7 +286,9 @@ public class HFileTargetIT implements Serializable {
         reader = HFile.createReader(fs, f, new CacheConfig(conf), conf);
         assertEquals(DataBlockEncoding.PREFIX, reader.getDataBlockEncoding());
       } finally {
-        reader.close();
+        if (reader != null) {
+          reader.close();
+        }
       }
       hfilesCount++;
     }
