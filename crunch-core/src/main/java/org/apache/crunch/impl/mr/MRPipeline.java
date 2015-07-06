@@ -23,10 +23,12 @@ import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import com.google.common.base.Charsets;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -35,6 +37,7 @@ import org.apache.crunch.CrunchRuntimeException;
 import org.apache.crunch.PCollection;
 import org.apache.crunch.PipelineExecution;
 import org.apache.crunch.PipelineResult;
+import org.apache.crunch.hadoop.mapreduce.lib.jobcontrol.CrunchControlledJob;
 import org.apache.crunch.impl.dist.DistributedPipeline;
 import org.apache.crunch.impl.dist.collect.PCollectionImpl;
 import org.apache.crunch.impl.mr.collect.MRCollectionFactory;
@@ -56,6 +59,8 @@ public class MRPipeline extends DistributedPipeline {
   private static final Log LOG = LogFactory.getLog(MRPipeline.class);
 
   private final Class<?> jarClass;
+  private final List<CrunchControlledJob.Hook> prepareHooks;
+  private final List<CrunchControlledJob.Hook> completionHooks;
 
   /**
    * Instantiate with a default Configuration and name.
@@ -97,6 +102,26 @@ public class MRPipeline extends DistributedPipeline {
   public MRPipeline(Class<?> jarClass, String name, Configuration conf) {
     super(name, conf, new MRCollectionFactory());
     this.jarClass = jarClass;
+    this.prepareHooks = Lists.newArrayList();
+    this.completionHooks = Lists.newArrayList();
+  }
+
+  public MRPipeline addPrepareHook(CrunchControlledJob.Hook hook) {
+    this.prepareHooks.add(hook);
+    return this;
+  }
+
+  public List<CrunchControlledJob.Hook> getPrepareHooks() {
+    return prepareHooks;
+  }
+
+  public MRPipeline addCompletionHook(CrunchControlledJob.Hook hook) {
+    this.completionHooks.add(hook);
+    return this;
+  }
+
+  public List<CrunchControlledJob.Hook> getCompletionHooks() {
+    return completionHooks;
   }
 
   public MRExecutor plan() {
