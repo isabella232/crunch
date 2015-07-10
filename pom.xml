@@ -22,7 +22,7 @@ under the License.
   <parent>
     <groupId>com.cloudera.cdh</groupId>
     <artifactId>cdh-root</artifactId>
-    <version>5.3.5-SNAPSHOT</version>
+    <version>5.3.6-SNAPSHOT</version>
   </parent>
 
   <groupId>org.apache.crunch</groupId>
