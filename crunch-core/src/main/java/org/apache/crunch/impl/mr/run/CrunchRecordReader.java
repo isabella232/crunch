@@ -44,12 +44,8 @@ class CrunchRecordReader<K, V> extends RecordReader<K, V> {
     if (crunchSplit.get() instanceof CombineFileSplit) {
       combineFileSplit = (CombineFileSplit) crunchSplit.get();
     }
-    this.context = context;
-    Configuration conf = crunchSplit.getConf();
-    if (conf == null) {
-      conf = context.getConfiguration();
-      crunchSplit.setConf(conf);
-    }
+    crunchSplit.setConf(context.getConfiguration());
+    this.context = TaskAttemptContextFactory.create(crunchSplit.getConf(), context.getTaskAttemptID());
     initNextRecordReader();
   }
 
@@ -71,12 +67,10 @@ class CrunchRecordReader<K, V> extends RecordReader<K, V> {
     }
 
     idx++;
-    Configuration conf = crunchSplit.getConf();
     InputFormat<K, V> inputFormat = (InputFormat<K, V>) ReflectionUtils.newInstance(
         crunchSplit.getInputFormatClass(),
-        conf);
-    this.curReader = inputFormat.createRecordReader(getDelegateSplit(),
-        TaskAttemptContextFactory.create(conf, context.getTaskAttemptID()));
+        crunchSplit.getConf());
+    this.curReader = inputFormat.createRecordReader(getDelegateSplit(), context);
     return true;
   }
 
@@ -137,18 +131,14 @@ class CrunchRecordReader<K, V> extends RecordReader<K, V> {
   @Override
   public void initialize(InputSplit inputSplit, TaskAttemptContext context) throws IOException, InterruptedException {
     this.crunchSplit = (CrunchInputSplit) inputSplit;
-    this.context = context;
-    Configuration conf = crunchSplit.getConf();
-    if (conf == null) {
-      conf = context.getConfiguration();
-      crunchSplit.setConf(conf);
-    }
+    crunchSplit.setConf(context.getConfiguration());
+    this.context = TaskAttemptContextFactory.create(crunchSplit.getConf(), context.getTaskAttemptID());
     if (crunchSplit.get() instanceof CombineFileSplit) {
       combineFileSplit = (CombineFileSplit) crunchSplit.get();
     }
     if (curReader != null) {
       curReader.initialize(getDelegateSplit(),
-          TaskAttemptContextFactory.create(conf, context.getTaskAttemptID()));
+          TaskAttemptContextFactory.create(crunchSplit.getConf(), context.getTaskAttemptID()));
     }
   }
 
