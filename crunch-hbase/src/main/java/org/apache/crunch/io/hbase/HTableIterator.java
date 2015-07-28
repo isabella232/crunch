@@ -22,10 +22,11 @@ package org.apache.crunch.io.hbase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.crunch.Pair;
-import org.apache.hadoop.hbase.client.HTable;
+import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
+import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 
 import java.io.IOException;
@@ -35,13 +36,15 @@ import java.util.List;
 class HTableIterator implements Iterator<Pair<ImmutableBytesWritable, Result>> {
   private static final Log LOG = LogFactory.getLog(HTableIterator.class);
 
-  private final HTable table;
+  private final Table table;
+  private final Connection connection;
   private final Iterator<Scan> scans;
   private ResultScanner scanner;
   private Iterator<Result> iter;
 
-  public HTableIterator(HTable table, List<Scan> scans) {
+  public HTableIterator(Connection connection, Table table, List<Scan> scans) {
     this.table = table;
+    this.connection = connection;
     this.scans = scans.iterator();
     try{
       this.scanner = table.getScanner(this.scans.next());
@@ -69,6 +72,11 @@ class HTableIterator implements Iterator<Pair<ImmutableBytesWritable, Result>> {
           table.close();
         } catch (IOException e) {
           LOG.error("Exception closing HTable: " + table.getName(), e);
+        }
+        try {
+          connection.close();
+        } catch (IOException e) {
+          LOG.error("Exception closing HTable: {}", table.getName(), e);
         }
       }
     }
