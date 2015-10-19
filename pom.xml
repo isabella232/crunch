@@ -91,7 +91,7 @@ under the License.
     -->
     <guava.version>11.0.2</guava.version>
     <commons-io.version>2.1</commons-io.version>
-    <commons-lang.version>2.5</commons-lang.version>
+    <commons-lang.version>2.6</commons-lang.version>
     <commons-codec.version>1.4</commons-codec.version>
     <commons-httpclient.version>3.1</commons-httpclient.version>
     <commons-logging.version>1.1.1</commons-logging.version>
@@ -510,7 +510,6 @@ under the License.
       <properties>
         <hadoop.version>${cdh.hadoop.version}</hadoop.version>
         <hbase.version>${cdh.hbase.version}</hbase.version>
-        <commons-lang.version>2.5</commons-lang.version>
         <slf4j.version>${cdh.slf4j.version}</slf4j.version>
         <avro.hadoop.classifier>hadoop2</avro.hadoop.classifier>
       </properties>
