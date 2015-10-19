@@ -17,6 +17,7 @@
  */
 package org.apache.crunch.io.avro;
 
+import java.io.IOException;
 import org.apache.avro.mapred.AvroWrapper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -37,8 +38,7 @@ import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Job;
-
-import java.io.IOException;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 /**
  * A {@link org.apache.crunch.Target} that wraps {@link org.apache.crunch.types.avro.AvroPathPerKeyOutputFormat} to allow one file
@@ -60,7 +60,13 @@ public class AvroPathPerKeyTarget extends FileTargetImpl {
   }
 
   public AvroPathPerKeyTarget(Path path, FileNamingScheme fileNamingScheme) {
-    super(path, AvroPathPerKeyOutputFormat.class, fileNamingScheme);
+    this(path, AvroPathPerKeyOutputFormat.class, fileNamingScheme);
+  }
+
+  protected AvroPathPerKeyTarget(Path path, Class<? extends FileOutputFormat>
+      outputFormatClass,
+      FileNamingScheme fileNamingScheme) {
+    super(path, outputFormatClass, fileNamingScheme);
   }
 
   @Override
@@ -92,7 +98,6 @@ public class AvroPathPerKeyTarget extends FileTargetImpl {
       return;
     }
     FileSystem dstFs = path.getFileSystem(conf);
-    Path[] keys = FileUtil.stat2Paths(srcFs.listStatus(base));
     if (!dstFs.exists(path)) {
       dstFs.mkdirs(path);
     }
