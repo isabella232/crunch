@@ -29,8 +29,8 @@ import scala.tools.nsc.ObjectRunner
 import scala.tools.nsc.Properties
 import scala.tools.nsc.ScriptRunner
 import scala.tools.nsc.interpreter.ILoop
+import scala.tools.nsc.interpreter.ReplDir
 import scala.tools.nsc.io.Jar
-import scala.tools.nsc.io.VirtualDirectory
 
 import com.google.common.io.Files
 import org.apache.hadoop.conf.Configuration
@@ -127,7 +127,7 @@ object InterpreterRunner extends MainGenericRunner {
       ScriptRunner.runCommand(settings, combinedCode, thingToRun +: command.arguments)
     }
     else runTarget() match {
-      case Left(ex) => errorFn(ex)
+      case Left(ex) => errorFn(ex.getMessage(), Some(ex))
       case Right(b) => b
     }
   }
@@ -165,7 +165,7 @@ object InterpreterRunner extends MainGenericRunner {
    * @param entryPath The entry path for classes found in the virtual directory.
    * @param jarStream An output stream for writing the jar file.
    */
-  def addVirtualDirectoryToJar(dir: VirtualDirectory, entryPath: String, jarStream:
+  def addVirtualDirectoryToJar(dir: ReplDir, entryPath: String, jarStream:
       JarOutputStream): Unit = {
     dir.foreach { file =>
       if (file.isDirectory) {
@@ -174,7 +174,7 @@ object InterpreterRunner extends MainGenericRunner {
         val entry: JarEntry = new JarEntry(dirPath)
         jarStream.putNextEntry(entry)
         jarStream.closeEntry()
-        addVirtualDirectoryToJar(file.asInstanceOf[VirtualDirectory],
+        addVirtualDirectoryToJar(file.asInstanceOf[ReplDir],
             dirPath, jarStream)
       } else if (file.hasExtension("class")) {
         // Add class files as an entry in the jar file and write the class to the jar.

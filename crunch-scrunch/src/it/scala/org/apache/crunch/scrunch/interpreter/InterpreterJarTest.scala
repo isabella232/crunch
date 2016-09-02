@@ -22,7 +22,7 @@ import java.io.FileOutputStream
 import java.util.jar.JarFile
 import java.util.jar.JarOutputStream
 
-import scala.tools.nsc.io.VirtualDirectory
+import scala.tools.nsc.interpreter.ReplDir
 
 import com.google.common.io.Files
 import org.junit.Assert.assertNotNull
@@ -32,7 +32,7 @@ import org.scalatest.junit.JUnitSuite
 import org.apache.crunch.scrunch.CrunchSuite
 
 /**
- * Tests creating jars from a {@link scala.tools.nsc.io.VirtualDirectory}.
+ * Tests creating jars from a {@link scala.tools.nsc.interpreter.ReplDir}.
  */
 class InterpreterJarTest extends CrunchSuite {
 
@@ -41,10 +41,10 @@ class InterpreterJarTest extends CrunchSuite {
    */
   @Test def virtualDirToJar: Unit = {
     // Create a virtual directory and populate with some mock content.
-    val root = new VirtualDirectory("testDir", None)
+    val root: ReplDir = null; //FIXME
     // Add some subdirectories to the root.
     (1 to 10).foreach { i =>
-      val subdir = root.subdirectoryNamed("subdir" + i).asInstanceOf[VirtualDirectory]
+      val subdir = root.subdirectoryNamed("subdir" + i).asInstanceOf[ReplDir]
       // Add some classfiles to each sub directory.
       (1 to 10).foreach { j =>
         subdir.fileNamed("MyClass" + j + ".class")
