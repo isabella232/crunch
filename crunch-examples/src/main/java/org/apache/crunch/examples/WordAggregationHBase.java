@@ -23,6 +23,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.crunch.DoFn;
 import org.apache.crunch.Emitter;
 import org.apache.crunch.PCollection;
@@ -51,8 +53,6 @@ import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
 /**
@@ -63,7 +63,7 @@ import org.slf4j.LoggerFactory;
  */
 @SuppressWarnings("serial")
 public class WordAggregationHBase extends Configured implements Tool, Serializable {
-  private static final Logger LOG = LoggerFactory.getLogger(WordAggregationHBase.class);
+  private static final Log LOG = LogFactory.getLog(WordAggregationHBase.class);
 
   // Configuration parameters. Here configured for a hbase instance running
   // locally

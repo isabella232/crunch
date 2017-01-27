@@ -57,11 +57,11 @@ public class CSVRecordIterator implements Iterator<String>, Closeable {
    *          The size of the buffer used when reading the input stream
    * @param inputFileEncoding
    *          the encoding for the input file
-   * @param openQuoteChar
+   * @param openQuote
    *          the character to use to open quote blocks
-   * @param closeQuoteChar
+   * @param closeQuote
    *          the character to use to close quote blocks
-   * @param escapeChar
+   * @param escape
    *          the character to use for escaping control characters and quotes
    * @param maximumRecordSize
    *          The maximum acceptable size of one CSV record. Beyond this limit,

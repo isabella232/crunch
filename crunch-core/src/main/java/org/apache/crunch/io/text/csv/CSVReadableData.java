@@ -53,11 +53,11 @@ public class CSVReadableData extends ReadableDataImpl<String> {
    *          the size of the buffer to use while parsing through the input file
    * @param inputFileEncoding
    *          the encoding for the input file
-   * @param openQuoteChar
+   * @param openQuote
    *          the character to use to open quote blocks
-   * @param closeQuoteChar
+   * @param closeQuote
    *          the character to use to close quote blocks
-   * @param escapeChar
+   * @param escape
    *          the character to use for escaping control characters and quotes
    * @param maximumRecordSize
    *          The maximum acceptable size of one CSV record. Beyond this limit,

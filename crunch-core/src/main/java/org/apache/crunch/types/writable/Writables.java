@@ -18,21 +18,22 @@
 package org.apache.crunch.types.writable;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableBiMap;
-import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.crunch.CrunchRuntimeException;
 import org.apache.crunch.MapFn;
 import org.apache.crunch.Pair;
@@ -65,8 +66,6 @@ import org.apache.hadoop.mapreduce.TaskInputOutputContext;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Defines static methods that are analogous to the methods defined in
@@ -75,7 +74,7 @@ import org.slf4j.LoggerFactory;
  */
 public class Writables {
 
-  private static final Logger LOG = LoggerFactory.getLogger(Writables.class);
+  private static final Log LOG = LogFactory.getLog(Writables.class);
 
   static BiMap<Integer, Class<? extends Writable>> WRITABLE_CODES = HashBiMap.create(ImmutableBiMap.<Integer, Class<? extends Writable>>builder()
           .put(1, BytesWritable.class)
@@ -119,30 +118,36 @@ public class Writables {
    * @param code  The unique registration code for the class, which must be greater than or equal to 8
    */
   public static void registerComparable(Class<? extends WritableComparable> clazz, int code) {
-    if (WRITABLE_CODES.containsKey(code)) {
-      throw new IllegalArgumentException("Already have writable class assigned to code = " + code);
+    if (WRITABLE_CODES.containsKey(code) && !clazz.equals(WRITABLE_CODES.get(code))) {
+      throw new IllegalArgumentException(String.format(
+          "Already have writable class %s assigned to code = %d",
+          clazz,
+          code));
     }
     WRITABLE_CODES.put(code, clazz);
   }
 
   private static final String WRITABLE_COMPARABLE_CODES = "crunch.writable.comparable.codes";
 
-  private static void serializeWritableComparableCodes(Configuration conf) throws IOException {
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    ObjectOutputStream oos = new ObjectOutputStream(baos);
-    oos.writeObject(WRITABLE_CODES);
-    oos.close();
-    conf.set(WRITABLE_COMPARABLE_CODES, Base64.encodeBase64String(baos.toByteArray()));
+  static void serializeWritableComparableCodes(Configuration conf) throws IOException {
+    Map<Integer, String> codeToClassNameMap = Maps.transformValues(WRITABLE_CODES,
+        new Function<Class<? extends Writable>, String>() {
+          @Override
+          public String apply(Class<? extends Writable> input) {
+            return input.getName();
+          }
+        });
+    conf.set(WRITABLE_COMPARABLE_CODES, Joiner.on(';').withKeyValueSeparator(":").join(codeToClassNameMap));
   }
 
   static void reloadWritableComparableCodes(Configuration conf) throws Exception {
     if (conf.get(WRITABLE_COMPARABLE_CODES) != null) {
-      ByteArrayInputStream bais = new ByteArrayInputStream(Base64.decodeBase64(conf.get(WRITABLE_COMPARABLE_CODES)));
-      ObjectInputStream ois = new ObjectInputStream(bais);
-      BiMap<Integer, Class<? extends Writable>> codes = (BiMap<Integer, Class<? extends Writable>>) ois.readObject();
-      ois.close();
-      for (Map.Entry<Integer, Class<? extends Writable>> e : codes.entrySet()) {
-        WRITABLE_CODES.put(e.getKey(), e.getValue());
+      Map<String, String> codeToClassName = Splitter.on(';')
+          .withKeyValueSeparator(":").split(conf.get(WRITABLE_COMPARABLE_CODES));
+      for (Map.Entry<String, String> codeToClassNameEntry : codeToClassName.entrySet()) {
+        WRITABLE_CODES.put(
+            Integer.parseInt(codeToClassNameEntry.getKey()),
+            (Class<? extends Writable>) Class.forName(codeToClassNameEntry.getValue()));
       }
     }
   }
@@ -403,8 +408,9 @@ public class Writables {
         Class<Writable> clazz = ptype.getSerializationClass();
         if (WritableComparable.class.isAssignableFrom(clazz)) {
           if (!WRITABLE_CODES.inverse().containsKey(clazz)) {
-            LOG.warn("WritableComparable class {} in tuple type should be registered with Writables.registerComparable",
-                clazz.toString());
+            LOG.warn(String.format(
+                "WritableComparable class %s in tuple type should be registered with Writables.registerComparable",
+                clazz.toString()));
           }
         }
         writableClasses.add(clazz);

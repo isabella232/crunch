@@ -22,6 +22,8 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.crunch.CrunchRuntimeException;
 import org.apache.crunch.SourceTarget;
 import org.apache.crunch.Target;
@@ -42,12 +44,10 @@ import org.apache.hadoop.hbase.mapreduce.TableMapReduceUtil;
 import org.apache.hadoop.hbase.mapreduce.TableOutputFormat;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class HBaseTarget implements MapReduceTarget {
 
-  private static final Logger LOG = LoggerFactory.getLogger(HBaseTarget.class);
+  private static final Log LOG = LogFactory.getLog(HBaseTarget.class);
   
   protected String table;
   private Map<String, String> extraConf = Maps.newHashMap();

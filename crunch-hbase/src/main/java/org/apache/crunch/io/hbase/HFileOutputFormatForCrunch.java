@@ -22,6 +22,8 @@ package org.apache.crunch.io.hbase;
 import com.google.common.collect.ImmutableList;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -32,6 +34,8 @@ import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.Tag;
 import org.apache.hadoop.hbase.io.hfile.HFile;
 import org.apache.hadoop.hbase.io.hfile.HFileContext;
+import org.apache.hadoop.hbase.io.hfile.HFileDataBlockEncoderImpl;
+import org.apache.hadoop.hbase.regionserver.HStore;
 import org.apache.hadoop.hbase.regionserver.StoreFile;
 import org.apache.hadoop.hbase.regionserver.TimeRangeTracker;
 import org.apache.hadoop.hbase.util.Bytes;
@@ -39,8 +43,6 @@ import org.apache.hadoop.io.WritableUtils;
 import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
@@ -60,7 +62,7 @@ public class HFileOutputFormatForCrunch extends FileOutputFormat<Object, Cell> {
 
   public static final String HCOLUMN_DESCRIPTOR_KEY = "hbase.hfileoutputformat.column.descriptor";
   private static final String COMPACTION_EXCLUDE_CONF_KEY = "hbase.mapreduce.hfileoutputformat.compaction.exclude";
-  private static final Logger LOG = LoggerFactory.getLogger(HFileOutputFormatForCrunch.class);
+  private static final Log LOG = LogFactory.getLog(HFileOutputFormatForCrunch.class);
 
   private final byte [] now = Bytes.toBytes(System.currentTimeMillis());
   private final TimeRangeTracker trt = new TimeRangeTracker();
@@ -87,8 +89,8 @@ public class HFileOutputFormatForCrunch extends FileOutputFormat<Object, Cell> {
     }
     HColumnDescriptor hcol = new HColumnDescriptor();
     hcol.readFields(new DataInputStream(new ByteArrayInputStream(hcolBytes)));
-    LOG.info("Output path: {}", outputPath);
-    LOG.info("HColumnDescriptor: {}", hcol.toString());
+    LOG.info("Output path: " + outputPath);
+    LOG.info("HColumnDescriptor: " + hcol.toString());
     final HFile.Writer writer = HFile.getWriterFactoryNoCache(conf)
         .withPath(fs, outputPath)
         .withComparator(KeyValue.COMPARATOR)

@@ -36,6 +36,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Longs;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.crunch.DoFn;
 import org.apache.crunch.Emitter;
 import org.apache.crunch.FilterFn;
@@ -65,12 +67,10 @@ import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.RawComparator;
 import org.apache.hadoop.io.SequenceFile;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public final class HFileUtils {
 
-  private static final Logger LOG = LoggerFactory.getLogger(HFileUtils.class);
+  private static final Log LOG = LogFactory.getLog(HFileUtils.class);
 
   /** Compares {@code KeyValue} by its family, qualifier, timestamp (reversely), type (reversely) and memstoreTS. */
   private static final Comparator<KeyValue> KEY_VALUE_COMPARATOR = new Comparator<KeyValue>() {
@@ -370,7 +370,7 @@ public final class HFileUtils {
       Path outputPath) throws IOException {
     HColumnDescriptor[] families = table.getTableDescriptor().getColumnFamilies();
     if (families.length == 0) {
-      LOG.warn("{} has no column families", table);
+      LOG.warn(table + "has no column families");
       return;
     }
     for (HColumnDescriptor f : families) {
@@ -433,7 +433,7 @@ public final class HFileUtils {
       Configuration conf,
       Path path,
       List<KeyValue> splitPoints) throws IOException {
-    LOG.info("Writing {} split points to {}", splitPoints.size(), path);
+    LOG.info("Writing " + splitPoints.size() + " split points to " + path);
     SequenceFile.Writer writer = SequenceFile.createWriter(
         path.getFileSystem(conf),
         conf,

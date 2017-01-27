@@ -30,6 +30,8 @@ import java.util.Map.Entry;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.crunch.CachingOptions;
 import org.apache.crunch.CrunchRuntimeException;
 import org.apache.crunch.PCollection;
@@ -48,15 +50,13 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Pipeline implementation that is executed within Hadoop MapReduce.
  */
 public class MRPipeline extends DistributedPipeline {
 
-  private static final Logger LOG = LoggerFactory.getLogger(MRPipeline.class);
+  private static final Log LOG = LogFactory.getLog(MRPipeline.class);
 
   private final Class<?> jarClass;
   private final List<CrunchControlledJob.Hook> prepareHooks;
@@ -204,7 +204,7 @@ public class MRPipeline extends DistributedPipeline {
         final int maxPipeNameLength = 150;
         String filenamePrefix = encodedName.substring(0, Math.min(maxPipeNameLength, encodedName.length()));
         Path jobPlanPath = new Path(uri.getPath(), filenamePrefix + filenameSuffix);
-        LOG.info("Writing jobplan to {}", jobPlanPath);
+        LOG.info("Writing jobplan to " + jobPlanPath);
         outputStream = fs.create(jobPlanPath, true);
         outputStream.write(dotFileContents.getBytes(Charsets.UTF_8));
       } catch (URISyntaxException e) {

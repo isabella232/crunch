@@ -23,6 +23,9 @@ import java.io.IOException;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.reflect.ReflectDatumWriter;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.crunch.CrunchRuntimeException;
 import org.apache.crunch.DoFn;
 import org.apache.crunch.Emitter;
@@ -59,6 +62,8 @@ import org.apache.hadoop.util.hash.Hash;
  * potentially costly shuffle phase for data that would never be joined to the left side.
  */
 public class BloomFilterJoinStrategy<K, U, V> implements JoinStrategy<K, U, V> {
+  
+  private static final Log LOG = LogFactory.getLog(BloomFilterJoinStrategy.class);
 
   private int vectorSize;
   private int nbHash;
