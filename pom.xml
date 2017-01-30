@@ -89,40 +89,40 @@ under the License.
               classpath. Additionally, please keep licensing information
               in NOTICE and LICENSE files up to date.
     -->
-    <guava.version>14.0.1</guava.version>
-    <commons-io.version>2.1</commons-io.version>
-    <commons-lang.version>2.6</commons-lang.version>
-    <commons-codec.version>1.4</commons-codec.version>
-    <commons-httpclient.version>3.1</commons-httpclient.version>
-    <commons-logging.version>1.1.1</commons-logging.version>
-    <commons-cli.version>1.2</commons-cli.version>
+    <guava.version>${cdh.guava.version}</guava.version>
+    <commons-io.version>${cdh.commons-io.version}</commons-io.version>
+    <commons-lang.version>${cdh.commons-lang.version}</commons-lang.version>
+    <commons-codec.version>${cdh.commons-codec.version}</commons-codec.version>
+    <commons-httpclient.version>${cdh.commons-httpclient.version}</commons-httpclient.version>
+    <commons-logging.version>${cdh.commons-logging.version}</commons-logging.version>
+    <commons-cli.version>${cdh.commons-cli.version}</commons-cli.version>
     <avro.version>${cdh.avro.version}</avro.version>
     <avro.hadoop.classifier>hadoop2</avro.hadoop.classifier>
     <hive.version>${cdh.hive.version}</hive.version>
     <parquet.version>${cdh.parquet.version}</parquet.version>
     <javassist.version>3.16.1-GA</javassist.version>
     <jackson.version>${cdh.jackson.version}</jackson.version>
+    <jackson.databind.version>2.6.1</jackson.databind.version>
     <protobuf-java.version>${cdh.protobuf.version}</protobuf-java.version>
     <libthrift.version>${cdh.thrift.version}</libthrift.version>
     <slf4j.version>${cdh.slf4j.version}</slf4j.version>
-    <log4j.version>1.2.17</log4j.version>
-    <algebird.version>0.8.0</algebird.version>
+    <log4j.version>${cdh.log4j.version}</log4j.version>
+    <algebird.version>0.9.0</algebird.version>
     <junit.version>4.10</junit.version>
     <hamcrest.version>1.1</hamcrest.version>
-    <mockito.version>1.9.0</mockito.version>
+    <mockito.version>${cdh.mockito.version}</mockito.version>
     <pkg>org.apache.crunch</pkg>
 
     <!-- Can be overridden by hadoop-2 profile, but these are the default values -->
-    <hadoop.version>2.5.2</hadoop.version>
-    <hbase.version>1.0.0</hbase.version>
-    <commons-lang.version>2.5</commons-lang.version>
-    <avro.classifier>hadoop2</avro.classifier>
+    <hadoop.version>1.1.2</hadoop.version>
+    <hbase.version>${cdh.hbase.version}</hbase.version>
+    <avro.classifier>hadoop1</avro.classifier>
 
     <scala.base.version>${cdh.scala.binary.version}</scala.base.version>
     <scala.version>${cdh.scala.version}</scala.version>
-    <scalatest.version>2.2.1</scalatest.version>
+    <scalatest.version>2.2.4</scalatest.version>
     <spark.version>${cdh.spark.version}</spark.version>
-    <jsr305.version>1.3.9</jsr305.version>
+    <jsr305.version>${cdh.findbugs.version}</jsr305.version>
     <pkg>org.apache.crunch</pkg>
   </properties>
 
@@ -330,6 +330,18 @@ under the License.
       </dependency>
 
       <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-databind</artifactId>
+        <version>${jackson.databind.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-annotations</artifactId>
+        <version>${jackson.databind.version}</version>
+      </dependency>
+
+      <dependency>
         <groupId>com.google.protobuf</groupId>
         <artifactId>protobuf-java</artifactId>
         <version>${protobuf-java.version}</version>
@@ -484,7 +496,7 @@ under the License.
       <dependency>
         <groupId>jline</groupId>
         <artifactId>jline</artifactId>
-        <version>2.10</version>
+        <version>${cdh.jline.version}</version>
       </dependency>
 
       <dependency>
