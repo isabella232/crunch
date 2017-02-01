@@ -111,11 +111,12 @@ under the License.
     <junit.version>4.10</junit.version>
     <hamcrest.version>1.1</hamcrest.version>
     <mockito.version>${cdh.mockito.version}</mockito.version>
+    <netty.version>4.1.1.Final</netty.version>
     <pkg>org.apache.crunch</pkg>
 
     <!-- Can be overridden by hadoop-2 profile, but these are the default values -->
     <hadoop.version>1.1.2</hadoop.version>
-    <hbase.version>${cdh.hbase.version}</hbase.version>
+    <hbase.version>2.0.0-SNAPSHOT</hbase.version>
     <avro.classifier>hadoop1</avro.classifier>
 
     <scala.base.version>${cdh.scala.binary.version}</scala.base.version>
@@ -207,6 +208,12 @@ under the License.
       </dependency>
 
       <dependency>
+	      <groupId>io.netty</groupId>
+	      <artifactId>netty-all</artifactId>
+	      <version>${netty.version}</version>
+      </dependency>
+
+      <dependency>
         <groupId>org.apache.avro</groupId>
         <artifactId>avro</artifactId>
         <version>${avro.version}</version>
@@ -249,6 +256,9 @@ under the License.
           </exclusion>
         </exclusions>
       </dependency>
+
+      <dependency> <groupId>org.xerial.snappy</groupId> <artifactId>snappy-java</artifactId> <version>1.0.5</version> </dependency>
+
       <dependency>
         <groupId>org.apache.avro</groupId>
         <artifactId>trevni-core</artifactId>
@@ -358,6 +368,12 @@ under the License.
         <artifactId>hbase-common</artifactId>
         <version>${hbase.version}</version>
         <type>jar</type>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.hbase</groupId>
+        <artifactId>hbase-protocol</artifactId>
+        <version>${hbase.version}</version>
       </dependency>
 
       <dependency>

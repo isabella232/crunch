@@ -59,7 +59,7 @@ public class HFileReaderFactory implements FileReaderFactory<KeyValue> {
 
     public HFileIterator(HFileScanner scanner) {
       this.scanner = scanner;
-      this.curr = KeyValue.cloneAndAddTags(scanner.getKeyValue(), ImmutableList.<Tag>of());
+      this.curr = KeyValue.cloneAndAddTags(scanner.getCell(), ImmutableList.<Tag>of());
     }
 
     @Override
@@ -72,7 +72,7 @@ public class HFileReaderFactory implements FileReaderFactory<KeyValue> {
       KeyValue ret = curr;
       try {
         if (scanner.next()) {
-          curr = KeyValue.cloneAndAddTags(scanner.getKeyValue(), ImmutableList.<Tag>of());
+          curr = KeyValue.cloneAndAddTags(scanner.getCell(), ImmutableList.<Tag>of());
         } else {
           curr = null;
         }

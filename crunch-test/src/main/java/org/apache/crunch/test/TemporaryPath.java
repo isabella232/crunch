@@ -139,7 +139,7 @@ public final class TemporaryPath extends ExternalResource {
   }
 
   private static void copy(String resourceName, File dest) throws IOException {
-    Resources.asByteSource(Resources.getResource(resourceName)).copyTo(Files.asByteSink(dest));
+    Files.copy(Resources.newInputStreamSupplier(Resources.getResource(resourceName)), dest);
   }
 
   private static Path toPath(File file) {

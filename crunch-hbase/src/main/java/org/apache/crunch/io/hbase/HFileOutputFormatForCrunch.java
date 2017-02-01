@@ -20,21 +20,23 @@
 package org.apache.crunch.io.hbase;
 
 import com.google.common.collect.ImmutableList;
-import org.apache.commons.codec.DecoderException;
-import org.apache.commons.codec.binary.Hex;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.Cell;
-import org.apache.hadoop.hbase.HColumnDescriptor;
+import org.apache.hadoop.hbase.CellComparator;
 import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.Tag;
+import org.apache.hadoop.hbase.io.encoding.DataBlockEncoding;
 import org.apache.hadoop.hbase.io.hfile.CacheConfig;
 import org.apache.hadoop.hbase.io.hfile.HFile;
 import org.apache.hadoop.hbase.io.hfile.HFileContext;
+import org.apache.hadoop.hbase.io.hfile.HFileContextBuilder;
+import org.apache.hadoop.hbase.io.hfile.HFileWriterImpl;
 import org.apache.hadoop.hbase.regionserver.BloomType;
 import org.apache.hadoop.hbase.regionserver.StoreFile;
+import org.apache.hadoop.hbase.regionserver.StoreFileWriter;
 import org.apache.hadoop.hbase.regionserver.TimeRangeTracker;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.WritableUtils;
@@ -44,8 +46,6 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
 import java.io.IOException;
 
 /**
@@ -60,7 +60,11 @@ import java.io.IOException;
  */
 public class HFileOutputFormatForCrunch extends FileOutputFormat<Object, Cell> {
 
+  // HCOLUMN_DESCRIPTOR_KEY is no longer used, but left for binary compatibility
   public static final String HCOLUMN_DESCRIPTOR_KEY = "hbase.hfileoutputformat.column.descriptor";
+  public static final String HCOLUMN_DESCRIPTOR_COMPRESSION_TYPE_KEY = "hbase.hfileoutputformat.column.descriptor.compressiontype";
+  public static final String HCOLUMN_DESCRIPTOR_DATA_BLOCK_ENCODING_KEY = "hbase.hfileoutputformat.column.descriptor.datablockencoding";
+  public static final String HCOLUMN_DESCRIPTOR_BLOOM_FILTER_TYPE_KEY = "hbase.hfileoutputformat.column.descriptor.bloomfiltertype";
   private static final String COMPACTION_EXCLUDE_CONF_KEY = "hbase.mapreduce.hfileoutputformat.compaction.exclude";
   private static final Logger LOG = LoggerFactory.getLogger(HFileOutputFormatForCrunch.class);
 
@@ -77,28 +81,19 @@ public class HFileOutputFormatForCrunch extends FileOutputFormat<Object, Cell> {
     final boolean compactionExclude = conf.getBoolean(
         COMPACTION_EXCLUDE_CONF_KEY, false);
 
-    String hcolStr = conf.get(HCOLUMN_DESCRIPTOR_KEY);
-    if (hcolStr == null) {
-      throw new AssertionError(HCOLUMN_DESCRIPTOR_KEY + " is not set in conf");
-    }
-    byte[] hcolBytes;
-    try {
-      hcolBytes = Hex.decodeHex(hcolStr.toCharArray());
-    } catch (DecoderException e) {
-      throw new AssertionError("Bad hex string: " + hcolStr);
-    }
-    HColumnDescriptor hcol = new HColumnDescriptor();
-    hcol.readFields(new DataInputStream(new ByteArrayInputStream(hcolBytes)));
     LOG.info("Output path: {}", outputPath);
-    LOG.info("HColumnDescriptor: {}", hcol.toString());
     Configuration noCacheConf = new Configuration(conf);
     noCacheConf.setFloat(HConstants.HFILE_BLOCK_CACHE_SIZE_KEY, 0.0f);
-    final StoreFile.Writer writer = new StoreFile.WriterBuilder(conf, new CacheConfig(noCacheConf), fs)
-        .withComparator(KeyValue.COMPARATOR)
-        .withFileContext(getContext(hcol))
+    StoreFileWriter.Builder writerBuilder =
+        new StoreFileWriter.Builder(conf, new CacheConfig(noCacheConf), fs)
+        .withComparator(CellComparator.COMPARATOR)
         .withFilePath(outputPath)
-        .withBloomType(hcol.getBloomFilterType())
-        .build();
+        .withFileContext(getContext(conf));
+    String bloomFilterType = conf.get(HCOLUMN_DESCRIPTOR_BLOOM_FILTER_TYPE_KEY);
+    if (bloomFilterType != null) {
+      writerBuilder.withBloomType(BloomType.valueOf(bloomFilterType));
+    }
+    final StoreFileWriter writer = writerBuilder.build();
 
     return new RecordWriter<Object, Cell>() {
       @Override
@@ -129,10 +124,16 @@ public class HFileOutputFormatForCrunch extends FileOutputFormat<Object, Cell> {
     };
   }
 
-  private HFileContext getContext(HColumnDescriptor desc) {
-    HFileContext ctxt = new HFileContext();
-    ctxt.setDataBlockEncoding(desc.getDataBlockEncoding());
-    ctxt.setCompression(desc.getCompression());
-    return ctxt;
+  private HFileContext getContext(Configuration conf) {
+    HFileContextBuilder contextBuilder = new HFileContextBuilder();
+    String compressionType = conf.get(HCOLUMN_DESCRIPTOR_COMPRESSION_TYPE_KEY);
+    if (compressionType != null) {
+      contextBuilder.withCompression(HFileWriterImpl.compressionByName(compressionType));
+    }
+    String dataBlockEncoding = conf.get(HCOLUMN_DESCRIPTOR_DATA_BLOCK_ENCODING_KEY);
+    if (dataBlockEncoding != null) {
+      contextBuilder.withDataBlockEncoding(DataBlockEncoding.valueOf(dataBlockEncoding));
+    }
+    return contextBuilder.build();
   }
 }

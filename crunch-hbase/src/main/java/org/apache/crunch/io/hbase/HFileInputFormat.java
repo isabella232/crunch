@@ -25,6 +25,8 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
+import org.apache.hadoop.hbase.Cell;
+import org.apache.hadoop.hbase.CellUtil;
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.Tag;
 import org.apache.hadoop.hbase.io.hfile.CacheConfig;
@@ -129,8 +131,8 @@ public class HFileInputFormat extends FileInputFormat<NullWritable, KeyValue> {
           if(LOG.isInfoEnabled()) {
             LOG.info("Seeking to start row {}", Bytes.toStringBinary(startRow));
           }
-          KeyValue kv = KeyValue.createFirstOnRow(startRow);
-          hasNext = seekAtOrAfter(scanner, kv);
+          Cell cell = CellUtil.createFirstOnRow(startRow, 0, (short) startRow.length);
+          hasNext = seekAtOrAfter(scanner, cell);
         } else {
           LOG.info("Seeking to start");
           hasNext = scanner.seekTo();
@@ -142,7 +144,7 @@ public class HFileInputFormat extends FileInputFormat<NullWritable, KeyValue> {
       if (!hasNext) {
         return false;
       }
-      value = KeyValue.cloneAndAddTags(scanner.getKeyValue(), ImmutableList.<Tag>of());
+      value = KeyValue.cloneAndAddTags(scanner.getCell(), ImmutableList.<Tag>of());
       if (stopRow != null &&
           Bytes.compareTo(
               value.getRowArray(), value.getRowOffset(), value.getRowLength(),
@@ -182,7 +184,7 @@ public class HFileInputFormat extends FileInputFormat<NullWritable, KeyValue> {
 
     // This method is copied from o.a.h.hbase.regionserver.StoreFileScanner, as we don't want
     // to depend on it.
-    private static boolean seekAtOrAfter(HFileScanner s, KeyValue k)
+    private static boolean seekAtOrAfter(HFileScanner s, Cell k)
         throws IOException {
       int result = s.seekTo(k);
       if(result < 0) {

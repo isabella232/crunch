@@ -59,10 +59,11 @@ import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.KeyValueUtil;
 import org.apache.hadoop.hbase.Tag;
-import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Put;
+import org.apache.hadoop.hbase.client.RegionLocator;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.Scan;
+import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.io.TimeRange;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.BytesWritable;
@@ -270,9 +271,9 @@ public final class HFileUtils {
       Cell leftKey = new KeyValue(left, loffset + 8, llength - 8);
       Cell rightKey = new KeyValue(right, roffset + 8, rlength - 8);
 
-      byte[] lRow = leftKey.getRow();
-      byte[] rRow = rightKey.getRow();
-      int rowCmp = Bytes.compareTo(lRow, rRow);
+      int rowCmp = Bytes.compareTo(
+          leftKey.getRowArray(), leftKey.getRowOffset(), leftKey.getRowLength(),
+          rightKey.getRowArray(), rightKey.getRowOffset(), rightKey.getRowLength());
       if (rowCmp != 0) {
         return rowCmp;
       } else {
@@ -374,9 +375,10 @@ public final class HFileUtils {
 
   public static <C extends Cell> void writeToHFilesForIncrementalLoad(
           PCollection<C> cells,
-          HTable table,
+          Table table,
+          RegionLocator regionLocator,
           Path outputPath) throws IOException {
-    writeToHFilesForIncrementalLoad(cells, table, outputPath, false);
+    writeToHFilesForIncrementalLoad(cells, table, regionLocator, outputPath, false);
   }
 
   /**
@@ -390,7 +392,8 @@ public final class HFileUtils {
    */
   public static <C extends Cell> void writeToHFilesForIncrementalLoad(
       PCollection<C> cells,
-      HTable table,
+      Table table,
+      RegionLocator regionLocator,
       Path outputPath,
       boolean limitToAffectedRegions) throws IOException {
     HColumnDescriptor[] families = table.getTableDescriptor().getColumnFamilies();
@@ -398,7 +401,7 @@ public final class HFileUtils {
       LOG.warn("{} has no column families", table);
       return;
     }
-    PCollection<C> partitioned = sortAndPartition(cells, table, limitToAffectedRegions);
+    PCollection<C> partitioned = sortAndPartition(cells, regionLocator, limitToAffectedRegions);
     for (HColumnDescriptor f : families) {
       byte[] family = f.getName();
       partitioned
@@ -409,9 +412,10 @@ public final class HFileUtils {
 
   public static void writePutsToHFilesForIncrementalLoad(
           PCollection<Put> puts,
-          HTable table,
+          Table table,
+          RegionLocator regionLocator,
           Path outputPath) throws IOException {
-    writePutsToHFilesForIncrementalLoad(puts, table, outputPath, false);
+    writePutsToHFilesForIncrementalLoad(puts, table, regionLocator, outputPath, false);
   }
 
   /**
@@ -425,7 +429,8 @@ public final class HFileUtils {
    */
   public static void writePutsToHFilesForIncrementalLoad(
       PCollection<Put> puts,
-      HTable table,
+      Table table,
+      RegionLocator regionLocator,
       Path outputPath,
       boolean limitToAffectedRegions) throws IOException {
     PCollection<Cell> cells = puts.parallelDo("ConvertPutToCells", new DoFn<Put, Cell>() {
@@ -436,21 +441,21 @@ public final class HFileUtils {
         }
       }
     }, HBaseTypes.cells());
-    writeToHFilesForIncrementalLoad(cells, table, outputPath, limitToAffectedRegions);
+    writeToHFilesForIncrementalLoad(cells, table, regionLocator, outputPath, limitToAffectedRegions);
   }
 
-  public static <C extends Cell> PCollection<C> sortAndPartition(PCollection<C> cells, HTable table) throws IOException {
-    return sortAndPartition(cells, table, false);
+  public static <C extends Cell> PCollection<C> sortAndPartition(PCollection<C> cells, RegionLocator regionLocator) throws IOException {
+    return sortAndPartition(cells, regionLocator, false);
   }
 
   /**
-   * Sorts and partitions the provided <code>cells</code> for the given <code>table</code> to ensure all elements that belong
+   * Sorts and partitions the provided <code>cells</code> for the given <code>regionLocator</code> to ensure all elements that belong
    * in the same region end up in the same reducer. The flag <code>limitToAffectedRegions</code>, when set to true, will identify
    * the regions the data in <code>cells</code> belongs to and will set the number of reducers equal to the number of identified
    * affected regions. If set to false, then all regions will be used, and the number of reducers will be set to the number
    * of regions in the table.
    */
-  public static <C extends Cell> PCollection<C> sortAndPartition(PCollection<C> cells, HTable table, boolean limitToAffectedRegions) throws IOException {
+  public static <C extends Cell> PCollection<C> sortAndPartition(PCollection<C> cells, RegionLocator regionLocator, boolean limitToAffectedRegions) throws IOException {
     Configuration conf = cells.getPipeline().getConfiguration();
     PTable<C, Void> t = cells.parallelDo(
         "Pre-partition",
@@ -463,9 +468,9 @@ public final class HFileUtils {
 
     List<KeyValue> splitPoints;
     if(limitToAffectedRegions) {
-      splitPoints = getSplitPoints(table, t);
+      splitPoints = getSplitPoints(regionLocator, t);
     } else {
-      splitPoints = getSplitPoints(table);
+      splitPoints = getSplitPoints(regionLocator);
     }
     Path partitionFile = new Path(((DistributedPipeline) cells.getPipeline()).createTempPath(), "partition");
     writePartitionInfo(conf, partitionFile, splitPoints);
@@ -478,10 +483,10 @@ public final class HFileUtils {
     return t.groupByKey(options).ungroup().keys();
   }
 
-  private static List<KeyValue> getSplitPoints(HTable table) throws IOException {
-    List<byte[]> startKeys = ImmutableList.copyOf(table.getStartKeys());
+  private static List<KeyValue> getSplitPoints(RegionLocator regionLocator) throws IOException {
+    List<byte[]> startKeys = ImmutableList.copyOf(regionLocator.getStartKeys());
     if (startKeys.isEmpty()) {
-      throw new AssertionError(table + " has no regions!");
+      throw new AssertionError(regionLocator.getName().getNameAsString() + " has no regions!");
     }
     List<KeyValue> splitPoints = Lists.newArrayList();
     for (byte[] startKey : startKeys.subList(1, startKeys.size())) {
@@ -492,12 +497,12 @@ public final class HFileUtils {
     return splitPoints;
   }
 
-  private static <C> List<KeyValue> getSplitPoints(HTable table, PTable<C, Void> affectedRows) throws IOException {
+  private static <C> List<KeyValue> getSplitPoints(RegionLocator regionLocator, PTable<C, Void> affectedRows) throws IOException {
     List<byte[]> startKeys;
     try {
-      startKeys = Lists.newArrayList(table.getStartKeys());
+      startKeys = Lists.newArrayList(regionLocator.getStartKeys());
       if (startKeys.isEmpty()) {
-        throw new AssertionError(table + " has no regions!");
+        throw new AssertionError(regionLocator.getName().getNameAsString() + " has no regions!");
       }
     } catch (IOException e) {
       throw new CrunchRuntimeException(e);
@@ -586,7 +591,7 @@ public final class HFileUtils {
       return null;
     }
     if (kvs.size() == 1 && kvs.get(0).getType() == KeyValue.Type.Put.getCode()) {
-      return new Result(kvs);
+      return Result.create(Collections.<Cell>singletonList(kvs.get(0)));
     }
 
     kvs = maybeDeleteFamily(kvs);
@@ -594,7 +599,7 @@ public final class HFileUtils {
     // In-place sort KeyValues by family, qualifier and then timestamp reversely (whenever ties, deletes appear first).
     Collections.sort(kvs, KEY_VALUE_COMPARATOR);
 
-    List<KeyValue> results = Lists.newArrayListWithCapacity(kvs.size());
+    List<Cell> results = Lists.newArrayListWithCapacity(kvs.size());
     for (int i = 0, j; i < kvs.size(); i = j) {
       j = i + 1;
       while (j < kvs.size() && hasSameFamilyAndQualifier(kvs.get(i), kvs.get(j))) {
@@ -605,7 +610,7 @@ public final class HFileUtils {
     if (results.isEmpty()) {
       return null;
     }
-    return new Result(results);
+    return Result.create(results);
   }
 
   /**
