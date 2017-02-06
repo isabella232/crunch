@@ -111,12 +111,13 @@ under the License.
     <junit.version>4.10</junit.version>
     <hamcrest.version>1.1</hamcrest.version>
     <mockito.version>${cdh.mockito.version}</mockito.version>
-    <netty.version>4.1.1.Final</netty.version>
+    <netty.version>${cdh.io.netty-all.version}</netty.version>
     <pkg>org.apache.crunch</pkg>
 
     <!-- Can be overridden by hadoop-2 profile, but these are the default values -->
     <hadoop.version>1.1.2</hadoop.version>
-    <hbase.version>2.0.0-SNAPSHOT</hbase.version>
+    <!-- This should be coming from cdh -->
+    <hbase.version>${cdh.hbase.version}</hbase.version>
     <avro.classifier>hadoop1</avro.classifier>
 
     <scala.base.version>${cdh.scala.binary.version}</scala.base.version>
@@ -125,6 +126,7 @@ under the License.
     <spark.version>${cdh.spark.version}</spark.version>
     <jsr305.version>${cdh.findbugs.version}</jsr305.version>
     <pkg>org.apache.crunch</pkg>
+    <zookeeper.version>${cdh.zookeeper.version}</zookeeper.version>
   </properties>
 
   <scm>
@@ -365,53 +367,24 @@ under the License.
 
       <dependency>
         <groupId>org.apache.hbase</groupId>
-        <artifactId>hbase-common</artifactId>
+        <artifactId>hbase-shaded-client</artifactId>
         <version>${hbase.version}</version>
         <type>jar</type>
       </dependency>
 
       <dependency>
         <groupId>org.apache.hbase</groupId>
-        <artifactId>hbase-protocol</artifactId>
+        <artifactId>hbase-shaded-server</artifactId>
         <version>${hbase.version}</version>
+        <type>jar</type>
       </dependency>
 
-      <dependency>
-        <groupId>org.apache.hbase</groupId>
-        <artifactId>hbase-protocol</artifactId>
-        <version>${hbase.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.apache.hbase</groupId>
-        <artifactId>hbase-client</artifactId>
-        <version>${hbase.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.apache.hbase</groupId>
-        <artifactId>hbase-shell</artifactId>
-        <version>${hbase.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.apache.hbase</groupId>
-        <artifactId>hbase-server</artifactId>
-        <version>${hbase.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.apache.hbase</groupId>
-        <artifactId>hbase-testing-util</artifactId>
-        <version>${hbase.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.apache.hbase</groupId>
-        <artifactId>hbase-it</artifactId>
-        <type>test-jar</type>
-        <version>${hbase.version}</version>
-      </dependency>
+    <dependency>
+      <groupId>org.apache.hbase</groupId>
+      <artifactId>hbase-testing-util</artifactId>
+      <version>${hbase.version}</version>
+      <scope>test</scope>
+    </dependency>
 
       <dependency>
         <groupId>junit</groupId>
@@ -929,7 +902,7 @@ under the License.
           <encoding>UTF-8</encoding>
           <inputEncoding>UTF-8</inputEncoding>
           <outputEncoding>UTF-8</outputEncoding>
-          <argLine>-Xmx1G -Dfile.encoding=UTF-8</argLine>
+          <argLine>-Djava.net.preferIPv4Stack=true -Xmx1G -Dfile.encoding=UTF-8</argLine>
           <testSourceDirectory>${basedir}/src/it/java</testSourceDirectory>
         </configuration>
         <executions>

@@ -77,15 +77,15 @@ public class SparkWordCountHBaseIT {
     @SuppressWarnings("serial")
     public static PTable<String, Long> wordCount(PTable<ImmutableBytesWritable, Result> words) {
         return words.parallelDo(
-            new DoFn<Pair<ImmutableBytesWritable, Result>, String>() {
-                @Override
-                public void process(Pair<ImmutableBytesWritable, Result> row, Emitter<String> emitter) {
-                    byte[] word = row.second().getValue(WORD_COLFAM, null);
-                    if (word != null) {
-                        emitter.emit(Bytes.toString(word));
+                new DoFn<Pair<ImmutableBytesWritable, Result>, String>() {
+                    @Override
+                    public void process(Pair<ImmutableBytesWritable, Result> row, Emitter<String> emitter) {
+                        byte[] word = row.second().getValue(WORD_COLFAM, null);
+                        if (word != null) {
+                            emitter.emit(Bytes.toString(word));
+                        }
                     }
-                }
-            }, words.getTypeFamily().strings()).count();
+                }, words.getTypeFamily().strings()).count();
 
     }
 
@@ -107,19 +107,21 @@ public class SparkWordCountHBaseIT {
         conf.set(HConstants.TEMPORARY_FS_DIRECTORY_KEY, tmpDir.getFile("hbase-staging").getAbsolutePath());
         hbaseTestUtil = new HBaseTestingUtility(conf);
         hbaseTestUtil.startMiniZKCluster();
+        hbaseTestUtil.getConfiguration().set("hadoop.registry.zk.quorum",
+                "localhost:" + hbaseTestUtil.getZkCluster().getClientPort());
         hbaseTestUtil.startMiniHBaseCluster(1, 1);
     }
 
     @Test
     public void testWordCount() throws Exception {
         run(new SparkPipeline("local", "hbaseWordCount",
-            SparkWordCountHBaseIT.class, hbaseTestUtil.getConfiguration()));
+                SparkWordCountHBaseIT.class, hbaseTestUtil.getConfiguration()));
     }
 
     @Test
     public void testWordCountCustomFormat() throws Exception {
         run(new SparkPipeline("local", "hbaseWordCountCustom",
-            SparkWordCountHBaseIT.class, hbaseTestUtil.getConfiguration()), MyTableInputFormat.class);
+                SparkWordCountHBaseIT.class, hbaseTestUtil.getConfiguration()), MyTableInputFormat.class);
         assertTrue(MyTableInputFormat.CONSTRUCTED.get());
     }
 

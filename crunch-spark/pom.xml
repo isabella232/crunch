@@ -30,8 +30,24 @@ under the License.
 
   <dependencies>
     <dependency>
+      <groupId>org.apache.zookeeper</groupId>
+      <artifactId>zookeeper</artifactId>
+      <version>${cdh.zookeeper.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-minicluster</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-all</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.crunch</groupId>
+      <artifactId>crunch-core</artifactId>
     </dependency>
     <dependency>
       <groupId>org.scala-lang</groupId>
@@ -87,6 +103,12 @@ under the License.
       <groupId>org.apache.spark</groupId>
       <artifactId>spark-core_${scala.base.version}</artifactId>
       <scope>provided</scope>
+      <exclusions>
+        <exclusion>
+        <groupId>io.netty</groupId>
+        <artifactId>netty</artifactId>
+      </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>com.google.protobuf</groupId>
@@ -110,30 +132,35 @@ under the License.
     <dependency>
       <groupId>org.apache.hbase</groupId>
       <artifactId>hbase-testing-util</artifactId>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>io.netty</groupId>
+          <artifactId>netty-all</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.zookeeper</groupId>
+          <artifactId>zookeeper</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
+
     <dependency>
       <groupId>org.apache.hbase</groupId>
       <artifactId>hbase-protocol-shaded</artifactId>
       <version>${cdh.hbase.version}</version>
     </dependency>
+
     <dependency>
       <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase-common</artifactId>
-      <type>jar</type>
-      <scope>provided</scope>
+      <artifactId>hbase-shaded-client</artifactId>
     </dependency>
 
     <dependency>
       <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase-protocol</artifactId>
-      <scope>provided</scope>
+      <artifactId>hbase-shaded-server</artifactId>
     </dependency>
 
-    <dependency>
-      <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase-client</artifactId>
-      <scope>provided</scope>
-    </dependency>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>

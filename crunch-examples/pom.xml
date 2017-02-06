@@ -72,11 +72,11 @@ under the License.
 
     <dependency>
       <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase-server</artifactId>
+      <artifactId>hbase-shaded-server</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase-client</artifactId>
+      <artifactId>hbase-shaded-client</artifactId>
     </dependency>
 
   </dependencies>
