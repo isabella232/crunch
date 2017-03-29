@@ -258,8 +258,6 @@ under the License.
         </exclusions>
       </dependency>
 
-      <dependency> <groupId>org.xerial.snappy</groupId> <artifactId>snappy-java</artifactId> <version>1.0.5</version> </dependency>
-
       <dependency>
         <groupId>org.apache.avro</groupId>
         <artifactId>trevni-core</artifactId>
@@ -468,7 +466,6 @@ under the License.
         <artifactId>scala-library</artifactId>
         <version>${scala.version}</version>
       </dependency>
-
       <dependency>
         <groupId>org.scala-lang</groupId>
         <artifactId>scala-compiler</artifactId>
@@ -895,7 +892,7 @@ under the License.
           <encoding>UTF-8</encoding>
           <inputEncoding>UTF-8</inputEncoding>
           <outputEncoding>UTF-8</outputEncoding>
-          <argLine>-Djava.net.preferIPv4Stack=true -Xmx1G -Dfile.encoding=UTF-8</argLine>
+          <argLine>-Xmx1G -Dfile.encoding=UTF-8</argLine>
           <testSourceDirectory>${basedir}/src/it/java</testSourceDirectory>
         </configuration>
         <executions>
