@@ -893,6 +893,7 @@ under the License.
           <inputEncoding>UTF-8</inputEncoding>
           <outputEncoding>UTF-8</outputEncoding>
           <argLine>-Xmx1G -Dfile.encoding=UTF-8</argLine>
+          <forkMode>always</forkMode>
           <testSourceDirectory>${basedir}/src/it/java</testSourceDirectory>
         </configuration>
         <executions>
