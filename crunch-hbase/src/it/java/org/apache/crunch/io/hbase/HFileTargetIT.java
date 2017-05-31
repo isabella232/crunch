@@ -19,7 +19,6 @@ package org.apache.crunch.io.hbase;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import org.apache.commons.io.IOUtils;
@@ -58,8 +57,10 @@ import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.KeyValueUtil;
+import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.Tag;
 import org.apache.hadoop.hbase.client.Admin;
+import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.RegionLocator;
@@ -99,13 +100,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.apache.crunch.types.writable.Writables.nulls;
 import static org.apache.crunch.types.writable.Writables.tableOf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -160,7 +161,7 @@ public class HFileTargetIT implements Serializable {
   }
 
   private static Table createTable(int splits, HColumnDescriptor... hcols) throws Exception {
-    byte[] tableName = Bytes.toBytes("test_table_" + RANDOM.nextInt(1000000000));
+    TableName tableName = TableName.valueOf("test_table_" + RANDOM.nextInt(1000000000));
     HTableDescriptor htable = new HTableDescriptor(tableName);
     for (HColumnDescriptor hcol : hcols) {
       htable.addFamily(hcol);
@@ -208,15 +209,16 @@ public class HFileTargetIT implements Serializable {
     byte[] columnFamilyB = Bytes.toBytes("colfamB");
     Admin admin = HBASE_TEST_UTILITY.getAdmin();
     Table testTable = createTable(26, new HColumnDescriptor(columnFamilyA), new HColumnDescriptor(columnFamilyB));
-    RegionLocator regionLocator = admin.getConnection().getRegionLocator(testTable.getName());
+    Connection connection = admin.getConnection();
+    RegionLocator regionLocator = connection.getRegionLocator(testTable.getName());
     PCollection<String> shakespeare = pipeline.read(At.textFile(inputPath, Writables.strings()));
     PCollection<String> words = split(shakespeare, "\\s+");
     PTable<String,Long> wordCounts = words.count();
     PCollection<Put> wordCountPuts = convertToPuts(wordCounts, columnFamilyA, columnFamilyB);
     HFileUtils.writePutsToHFilesForIncrementalLoad(
         wordCountPuts,
-        testTable,
-        regionLocator,
+        connection,
+        testTable.getName(),
         outputPath);
 
     PipelineResult result = pipeline.run();
@@ -247,10 +249,11 @@ public class HFileTargetIT implements Serializable {
     Path outputPath1 = getTempPathOnHDFS("out1");
     Path outputPath2 = getTempPathOnHDFS("out2");
     Admin admin = HBASE_TEST_UTILITY.getAdmin();
+    Connection connection = admin.getConnection();
     Table table1 = createTable(26);
     Table table2 = createTable(26);
-    RegionLocator regionLocator1 = admin.getConnection().getRegionLocator(table1.getName());
-    RegionLocator regionLocator2 = admin.getConnection().getRegionLocator(table2.getName());
+    RegionLocator regionLocator1 = connection.getRegionLocator(table1.getName());
+    RegionLocator regionLocator2 = connection.getRegionLocator(table2.getName());
     LoadIncrementalHFiles loader = new LoadIncrementalHFiles(HBASE_TEST_UTILITY.getConfiguration());
     boolean onlyAffectedRegions = true;
 
@@ -262,13 +265,13 @@ public class HFileTargetIT implements Serializable {
     PTable<String, Long> longWordCounts = longWords.count();
     HFileUtils.writePutsToHFilesForIncrementalLoad(
         convertToPuts(shortWordCounts),
-        table1,
-        regionLocator1,
+        connection,
+        table1.getName(),
         outputPath1);
     HFileUtils.writePutsToHFilesForIncrementalLoad(
         convertToPuts(longWordCounts),
-        table2,
-        regionLocator2,
+        connection,
+        table2.getName(),
         outputPath2,
         onlyAffectedRegions);
 
@@ -291,11 +294,11 @@ public class HFileTargetIT implements Serializable {
     Path inputPath = copyResourceFileToHDFS("shakes.txt");
     Path outputPath = getTempPathOnHDFS("out");
     Admin admin = HBASE_TEST_UTILITY.getAdmin();
+    Connection connection = admin.getConnection();
     HColumnDescriptor hcol = new HColumnDescriptor(TEST_FAMILY);
     hcol.setDataBlockEncoding(newBlockEncoding);
     hcol.setBloomFilterType(BloomType.ROWCOL);
     Table testTable = createTable(26, hcol);
-    RegionLocator regionLocator = admin.getConnection().getRegionLocator(testTable.getName());
 
     PCollection<String> shakespeare = pipeline.read(At.textFile(inputPath, Writables.strings()));
     PCollection<String> words = split(shakespeare, "\\s+");
@@ -303,8 +306,8 @@ public class HFileTargetIT implements Serializable {
     PCollection<Put> wordCountPuts = convertToPuts(wordCounts);
     HFileUtils.writePutsToHFilesForIncrementalLoad(
         wordCountPuts,
-        testTable,
-        regionLocator,
+        connection,
+        testTable.getName(),
         outputPath);
 
     PipelineResult result = pipeline.run();
@@ -320,7 +323,7 @@ public class HFileTargetIT implements Serializable {
       }
       HFile.Reader reader = null;
       try {
-        reader = HFile.createReader(fs, f, new CacheConfig(conf), conf);
+        reader = HFile.createReader(fs, f, new CacheConfig(conf), true, conf);
         assertEquals(DataBlockEncoding.PREFIX, reader.getDataBlockEncoding());
 
         BloomType bloomFilterType = BloomType.valueOf(Bytes.toString(
@@ -349,8 +352,9 @@ public class HFileTargetIT implements Serializable {
     Path inputPath = copyResourceFileToHDFS("shakes.txt");
     Path outputPath1 = getTempPathOnHDFS("out1");
     Admin admin = HBASE_TEST_UTILITY.getAdmin();
+    Connection connection = admin.getConnection();
     Table table1 = createTable(26);
-    RegionLocator regionLocator1 = admin.getConnection().getRegionLocator(table1.getName());
+    RegionLocator regionLocator1 = connection.getRegionLocator(table1.getName());
 
     PCollection<String> shakespeare = pipeline.read(At.textFile(inputPath, Writables.strings()));
     PCollection<String> words = split(shakespeare, "\\s+");
@@ -361,8 +365,8 @@ public class HFileTargetIT implements Serializable {
     PCollection<Put> wordPuts = convertToPuts(count);
     HFileUtils.writePutsToHFilesForIncrementalLoad(
             wordPuts,
-            table1,
-            regionLocator1,
+            connection,
+            table1.getName(),
             outputPath1,
             onlyAffectedRegions);
 
@@ -527,6 +531,9 @@ public class HFileTargetIT implements Serializable {
           fs,
           f,
           new CacheConfig(fs.getConf()),
+          true,
+          new AtomicInteger(),
+          false,
           fs.getConf());
       StoreFileScanner scanner = reader.getStoreFileScanner(false, false, false, 0, 0, false);
       scanner.seek(fakeKV); // have to call seek of each underlying scanner, otherwise KeyValueHeap won't work

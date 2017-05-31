@@ -58,7 +58,9 @@ import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.KeyValueUtil;
+import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.Tag;
+import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.RegionLocator;
 import org.apache.hadoop.hbase.client.Result;
@@ -375,10 +377,10 @@ public final class HFileUtils {
 
   public static <C extends Cell> void writeToHFilesForIncrementalLoad(
           PCollection<C> cells,
-          Table table,
-          RegionLocator regionLocator,
+          Connection connection,
+          TableName tableName,
           Path outputPath) throws IOException {
-    writeToHFilesForIncrementalLoad(cells, table, regionLocator, outputPath, false);
+    writeToHFilesForIncrementalLoad(cells, connection, tableName, outputPath, false);
   }
 
   /**
@@ -392,10 +394,12 @@ public final class HFileUtils {
    */
   public static <C extends Cell> void writeToHFilesForIncrementalLoad(
       PCollection<C> cells,
-      Table table,
-      RegionLocator regionLocator,
+      Connection connection,
+      TableName tableName,
       Path outputPath,
       boolean limitToAffectedRegions) throws IOException {
+    Table table = connection.getTable(tableName);
+    RegionLocator regionLocator = connection.getRegionLocator(tableName);
     HColumnDescriptor[] families = table.getTableDescriptor().getColumnFamilies();
     if (families.length == 0) {
       LOG.warn("{} has no column families", table);
@@ -412,10 +416,10 @@ public final class HFileUtils {
 
   public static void writePutsToHFilesForIncrementalLoad(
           PCollection<Put> puts,
-          Table table,
-          RegionLocator regionLocator,
+          Connection connection,
+          TableName tableName,
           Path outputPath) throws IOException {
-    writePutsToHFilesForIncrementalLoad(puts, table, regionLocator, outputPath, false);
+    writePutsToHFilesForIncrementalLoad(puts, connection, tableName, outputPath, false);
   }
 
   /**
@@ -429,8 +433,8 @@ public final class HFileUtils {
    */
   public static void writePutsToHFilesForIncrementalLoad(
       PCollection<Put> puts,
-      Table table,
-      RegionLocator regionLocator,
+      Connection connection,
+      TableName tableName,
       Path outputPath,
       boolean limitToAffectedRegions) throws IOException {
     PCollection<Cell> cells = puts.parallelDo("ConvertPutToCells", new DoFn<Put, Cell>() {
@@ -441,7 +445,7 @@ public final class HFileUtils {
         }
       }
     }, HBaseTypes.cells());
-    writeToHFilesForIncrementalLoad(cells, table, regionLocator, outputPath, limitToAffectedRegions);
+    writeToHFilesForIncrementalLoad(cells, connection, tableName, outputPath, limitToAffectedRegions);
   }
 
   public static <C extends Cell> PCollection<C> sortAndPartition(PCollection<C> cells, RegionLocator regionLocator) throws IOException {

@@ -44,8 +44,10 @@ import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.KeyValueUtil;
+import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.Tag;
 import org.apache.hadoop.hbase.client.Admin;
+import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.RegionLocator;
@@ -56,7 +58,6 @@ import org.apache.hadoop.hbase.io.hfile.HFile;
 import org.apache.hadoop.hbase.mapreduce.LoadIncrementalHFiles;
 import org.apache.hadoop.hbase.regionserver.KeyValueHeap;
 import org.apache.hadoop.hbase.regionserver.KeyValueScanner;
-import org.apache.hadoop.hbase.regionserver.StoreFile;
 import org.apache.hadoop.hbase.regionserver.StoreFileReader;
 import org.apache.hadoop.hbase.regionserver.StoreFileScanner;
 import org.apache.hadoop.hbase.util.Bytes;
@@ -76,6 +77,7 @@ import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.apache.crunch.types.writable.Writables.nulls;
 import static org.apache.crunch.types.writable.Writables.tableOf;
@@ -135,7 +137,7 @@ public class SparkHFileTargetIT implements Serializable {
   }
 
   private static Table createTable(int splits, HColumnDescriptor... hcols) throws Exception {
-    byte[] tableName = Bytes.toBytes("test_table_" + RANDOM.nextInt(1000000000));
+    TableName tableName = TableName.valueOf("test_table_" + RANDOM.nextInt(1000000000));
     HTableDescriptor htable = new HTableDescriptor(tableName);
     for (HColumnDescriptor hcol : hcols) {
       htable.addFamily(hcol);
@@ -186,15 +188,16 @@ public class SparkHFileTargetIT implements Serializable {
     byte[] columnFamilyB = Bytes.toBytes("colfamB");
     Admin admin = HBASE_TEST_UTILITY.getAdmin();
     Table testTable = createTable(26, new HColumnDescriptor(columnFamilyA), new HColumnDescriptor(columnFamilyB));
-    RegionLocator regionLocator = admin.getConnection().getRegionLocator(testTable.getName());
+    Connection connection = admin.getConnection();
+    RegionLocator regionLocator = connection.getRegionLocator(testTable.getName());
     PCollection<String> shakespeare = pipeline.read(At.textFile(inputPath, Writables.strings()));
     PCollection<String> words = split(shakespeare, "\\s+");
     PTable<String,Long> wordCounts = words.count();
     PCollection<Put> wordCountPuts = convertToPuts(wordCounts, columnFamilyA, columnFamilyB);
     HFileUtils.writePutsToHFilesForIncrementalLoad(
             wordCountPuts,
-            testTable,
-            regionLocator,
+            admin.getConnection(),
+            testTable.getName(),
             outputPath);
 
     PipelineResult result = pipeline.run();
@@ -229,8 +232,9 @@ public class SparkHFileTargetIT implements Serializable {
     Admin admin = HBASE_TEST_UTILITY.getAdmin();
     Table table1 = createTable(26);
     Table table2 = createTable(26);
-    RegionLocator regionLocator1 = admin.getConnection().getRegionLocator(table1.getName());
-    RegionLocator regionLocator2 = admin.getConnection().getRegionLocator(table2.getName());
+    Connection connection = admin.getConnection();
+    RegionLocator regionLocator1 = connection.getRegionLocator(table1.getName());
+    RegionLocator regionLocator2 = connection.getRegionLocator(table2.getName());
     LoadIncrementalHFiles loader = new LoadIncrementalHFiles(HBASE_TEST_UTILITY.getConfiguration());
 
     PCollection<String> shakespeare = pipeline.read(At.textFile(inputPath, Writables.strings()));
@@ -241,13 +245,13 @@ public class SparkHFileTargetIT implements Serializable {
     PTable<String, Long> longWordCounts = longWords.count();
     HFileUtils.writePutsToHFilesForIncrementalLoad(
             convertToPuts(shortWordCounts),
-            table1,
-            regionLocator1,
+            connection,
+            table1.getName(),
             outputPath1);
     HFileUtils.writePutsToHFilesForIncrementalLoad(
             convertToPuts(longWordCounts),
-            table2,
-            regionLocator2,
+            connection,
+            table2.getName(),
             outputPath2);
 
     PipelineResult result = pipeline.run();
@@ -274,7 +278,7 @@ public class SparkHFileTargetIT implements Serializable {
     HColumnDescriptor hcol = new HColumnDescriptor(TEST_FAMILY);
     hcol.setDataBlockEncoding(newBlockEncoding);
     Table testTable = createTable(26, hcol);
-    RegionLocator regionLocator = admin.getConnection().getRegionLocator(testTable.getName());
+    Connection connection = admin.getConnection();
 
     PCollection<String> shakespeare = pipeline.read(At.textFile(inputPath, Writables.strings()));
     PCollection<String> words = split(shakespeare, "\\s+");
@@ -282,8 +286,8 @@ public class SparkHFileTargetIT implements Serializable {
     PCollection<Put> wordCountPuts = convertToPuts(wordCounts);
     HFileUtils.writePutsToHFilesForIncrementalLoad(
             wordCountPuts,
-            testTable,
-            regionLocator,
+            connection,
+            testTable.getName(),
             outputPath);
 
     PipelineResult result = pipeline.run();
@@ -299,7 +303,7 @@ public class SparkHFileTargetIT implements Serializable {
       }
       HFile.Reader reader = null;
       try {
-        reader = HFile.createReader(fs, f, new CacheConfig(conf), conf);
+        reader = HFile.createReader(fs, f, new CacheConfig(conf),true, conf);
         assertEquals(DataBlockEncoding.PREFIX, reader.getDataBlockEncoding());
       } finally {
         if (reader != null) {
@@ -378,6 +382,9 @@ public class SparkHFileTargetIT implements Serializable {
           fs,
           f,
           new CacheConfig(fs.getConf()),
+          true,
+          new AtomicInteger(),
+          false,
           fs.getConf());
       StoreFileScanner scanner = reader.getStoreFileScanner(false, false, false, 0, 0, false);
       scanner.seek(fakeKV); // have to call seek of each underlying scanner, otherwise KeyValueHeap won't work
