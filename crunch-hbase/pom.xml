@@ -82,6 +82,11 @@ under the License.
       <artifactId>hbase-server</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>org.apache.hbase</groupId>
+      <artifactId>hbase-mapreduce</artifactId>
+    </dependency>
+
 
     <dependency>
       <groupId>org.apache.crunch</groupId>
