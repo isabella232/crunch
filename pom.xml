@@ -688,7 +688,10 @@ under the License.
             <inputEncoding>UTF-8</inputEncoding>
             <outputEncoding>UTF-8</outputEncoding>
             <argLine>-Xmx2G -XX:PermSize=512m -XX:MaxPermSize=1G -Dfile.encoding=UTF-8</argLine>
-          </configuration>
+            <systemPropertyVariables>
+              <org.apache.hadoop.hbase.shaded.io.netty.packagePrefix>org.apache.hadoop.hbase.shaded.</org.apache.hadoop.hbase.shaded.io.netty.packagePrefix>
+            </systemPropertyVariables>
+        </configuration>
         </plugin>
         <plugin>
           <groupId>org.apache.avro</groupId>
@@ -889,6 +892,9 @@ under the License.
           <argLine>-Xmx1G -Dfile.encoding=UTF-8</argLine>
           <forkMode>always</forkMode>
           <testSourceDirectory>${basedir}/src/it/java</testSourceDirectory>
+          <systemPropertyVariables>
+            <org.apache.hadoop.hbase.shaded.io.netty.packagePrefix>org.apache.hadoop.hbase.shaded.</org.apache.hadoop.hbase.shaded.io.netty.packagePrefix>
+          </systemPropertyVariables>
         </configuration>
         <executions>
           <execution>
