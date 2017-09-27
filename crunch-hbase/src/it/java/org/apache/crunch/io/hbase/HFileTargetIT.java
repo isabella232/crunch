@@ -72,7 +72,7 @@ import org.apache.hadoop.hbase.mapreduce.LoadIncrementalHFiles;
 import org.apache.hadoop.hbase.regionserver.BloomType;
 import org.apache.hadoop.hbase.regionserver.KeyValueHeap;
 import org.apache.hadoop.hbase.regionserver.KeyValueScanner;
-import org.apache.hadoop.hbase.regionserver.StoreFile;
+import org.apache.hadoop.hbase.regionserver.HStoreFile;
 import org.apache.hadoop.hbase.regionserver.StoreFileReader;
 import org.apache.hadoop.hbase.regionserver.StoreFileScanner;
 import org.apache.hadoop.hbase.util.BloomFilter;
@@ -327,7 +327,7 @@ public class HFileTargetIT implements Serializable {
         assertEquals(DataBlockEncoding.PREFIX, reader.getDataBlockEncoding());
 
         BloomType bloomFilterType = BloomType.valueOf(Bytes.toString(
-            reader.loadFileInfo().get(StoreFile.BLOOM_FILTER_TYPE_KEY)));
+            reader.loadFileInfo().get(HStoreFile.BLOOM_FILTER_TYPE_KEY)));
         assertEquals(BloomType.ROWCOL, bloomFilterType);
         DataInput bloomMeta = reader.getGeneralBloomFilterMetadata();
         assertNotNull(bloomMeta);

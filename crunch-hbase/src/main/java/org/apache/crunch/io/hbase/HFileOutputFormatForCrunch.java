@@ -35,7 +35,7 @@ import org.apache.hadoop.hbase.io.hfile.HFileContext;
 import org.apache.hadoop.hbase.io.hfile.HFileContextBuilder;
 import org.apache.hadoop.hbase.io.hfile.HFileWriterImpl;
 import org.apache.hadoop.hbase.regionserver.BloomType;
-import org.apache.hadoop.hbase.regionserver.StoreFile;
+import org.apache.hadoop.hbase.regionserver.HStoreFile;
 import org.apache.hadoop.hbase.regionserver.StoreFileWriter;
 import org.apache.hadoop.hbase.regionserver.TimeRangeTracker;
 import org.apache.hadoop.hbase.util.Bytes;
@@ -109,15 +109,15 @@ public class HFileOutputFormatForCrunch extends FileOutputFormat<Object, Cell> {
 
       @Override
       public void close(TaskAttemptContext c) throws IOException {
-        writer.appendFileInfo(StoreFile.BULKLOAD_TIME_KEY,
+        writer.appendFileInfo(HStoreFile.BULKLOAD_TIME_KEY,
             Bytes.toBytes(System.currentTimeMillis()));
-        writer.appendFileInfo(StoreFile.BULKLOAD_TASK_KEY,
+        writer.appendFileInfo(HStoreFile.BULKLOAD_TASK_KEY,
             Bytes.toBytes(context.getTaskAttemptID().toString()));
-        writer.appendFileInfo(StoreFile.MAJOR_COMPACTION_KEY,
+        writer.appendFileInfo(HStoreFile.MAJOR_COMPACTION_KEY,
             Bytes.toBytes(true));
-        writer.appendFileInfo(StoreFile.EXCLUDE_FROM_MINOR_COMPACTION_KEY,
+        writer.appendFileInfo(HStoreFile.EXCLUDE_FROM_MINOR_COMPACTION_KEY,
             Bytes.toBytes(compactionExclude));
-        writer.appendFileInfo(StoreFile.TIMERANGE_KEY,
+        writer.appendFileInfo(HStoreFile.TIMERANGE_KEY,
             WritableUtils.toByteArray(trt));
         writer.close();
       }
