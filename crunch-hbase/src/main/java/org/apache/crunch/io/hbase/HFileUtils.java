@@ -118,7 +118,7 @@ public final class HFileUtils {
     }
 
     private int compareType(KeyValue l, KeyValue r) {
-      return (int) r.getType() - (int) l.getType();
+      return (int) r.getTypeByte() - (int) l.getTypeByte();
     }
 
   };
@@ -361,7 +361,7 @@ public final class HFileUtils {
             List<KeyValue> cells = Lists.newArrayList();
             for (Cell kv : input.second()) {
               try {
-                cells.add(KeyValue.cloneAndAddTags(kv, ImmutableList.<Tag>of())); // assuming the input fits into memory
+                cells.add(KeyValueUtil.copyToNewKeyValue(kv)); // assuming the input fits in memory
               } catch (Exception e) {
                 throw new RuntimeException(e);
               }
@@ -594,7 +594,7 @@ public final class HFileUtils {
     if (kvs.isEmpty()) {
       return null;
     }
-    if (kvs.size() == 1 && kvs.get(0).getType() == KeyValue.Type.Put.getCode()) {
+    if (kvs.size() == 1 && kvs.get(0).getTypeByte() == KeyValue.Type.Put.getCode()) {
       return Result.create(Collections.<Cell>singletonList(kvs.get(0)));
     }
 
@@ -624,7 +624,7 @@ public final class HFileUtils {
   private static List<KeyValue> maybeDeleteFamily(List<KeyValue> kvs) {
     long deleteFamilyCut = -1;
     for (KeyValue kv : kvs) {
-      if (kv.getType() == KeyValue.Type.DeleteFamily.getCode()) {
+      if (kv.getTypeByte() == KeyValue.Type.DeleteFamily.getCode()) {
         deleteFamilyCut = Math.max(deleteFamilyCut, kv.getTimestamp());
       }
     }
@@ -633,7 +633,7 @@ public final class HFileUtils {
     }
     List<KeyValue> results = Lists.newArrayList();
     for (KeyValue kv : kvs) {
-      if (kv.getType() == KeyValue.Type.DeleteFamily.getCode()) {
+      if (kv.getTypeByte() == KeyValue.Type.DeleteFamily.getCode()) {
         continue;
       }
       if (kv.getTimestamp() <= deleteFamilyCut) {
@@ -665,7 +665,7 @@ public final class HFileUtils {
     if (kvs.isEmpty()) {
       return kvs;
     }
-    if (kvs.get(0).getType() == KeyValue.Type.Put.getCode()) {
+    if (kvs.get(0).getTypeByte() == KeyValue.Type.Put.getCode()) {
       return kvs; // shortcut for the common case
     }
 
@@ -675,16 +675,16 @@ public final class HFileUtils {
       if (results.size() >= versions) {
         break;
       }
-      if (kv.getType() == KeyValue.Type.DeleteColumn.getCode()) {
+      if (kv.getTypeByte() == KeyValue.Type.DeleteColumn.getCode()) {
         break;
-      } else if (kv.getType() == KeyValue.Type.Put.getCode()) {
+      } else if (kv.getTypeByte() == KeyValue.Type.Put.getCode()) {
         if (kv.getTimestamp() != previousDeleteTimestamp) {
           results.add(kv);
         }
-      } else if (kv.getType() == KeyValue.Type.Delete.getCode()) {
+      } else if (kv.getTypeByte() == KeyValue.Type.Delete.getCode()) {
         previousDeleteTimestamp = kv.getTimestamp();
       } else {
-        throw new AssertionError("Unexpected KeyValue type: " + kv.getType());
+        throw new AssertionError("Unexpected KeyValue type: " + kv.getTypeByte());
       }
     }
     return results;

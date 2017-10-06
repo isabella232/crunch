@@ -27,6 +27,7 @@ import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.CellComparator;
 import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.KeyValue;
+import org.apache.hadoop.hbase.KeyValueUtil;
 import org.apache.hadoop.hbase.Tag;
 import org.apache.hadoop.hbase.io.encoding.DataBlockEncoding;
 import org.apache.hadoop.hbase.io.hfile.CacheConfig;
@@ -37,7 +38,6 @@ import org.apache.hadoop.hbase.io.hfile.HFileWriterImpl;
 import org.apache.hadoop.hbase.regionserver.BloomType;
 import org.apache.hadoop.hbase.regionserver.HStoreFile;
 import org.apache.hadoop.hbase.regionserver.StoreFileWriter;
-import org.apache.hadoop.hbase.regionserver.TimeRangeTracker;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.WritableUtils;
 import org.apache.hadoop.mapreduce.RecordWriter;
@@ -69,7 +69,6 @@ public class HFileOutputFormatForCrunch extends FileOutputFormat<Object, Cell> {
   private static final Logger LOG = LoggerFactory.getLogger(HFileOutputFormatForCrunch.class);
 
   private final byte [] now = Bytes.toBytes(System.currentTimeMillis());
-  private final TimeRangeTracker trt = new TimeRangeTracker();
 
   @Override
   public RecordWriter<Object, Cell> getRecordWriter(final TaskAttemptContext context)
@@ -96,29 +95,33 @@ public class HFileOutputFormatForCrunch extends FileOutputFormat<Object, Cell> {
     final StoreFileWriter writer = writerBuilder.build();
 
     return new RecordWriter<Object, Cell>() {
+
+      long maxSeqId = 0L;
+
       @Override
       public void write(Object row, Cell cell)
           throws IOException {
-        KeyValue copy = KeyValue.cloneAndAddTags(cell, ImmutableList.<Tag>of());
+        KeyValue copy = KeyValueUtil.copyToNewKeyValue(cell);
         if (copy.getTimestamp() == HConstants.LATEST_TIMESTAMP) {
           copy.updateLatestStamp(now);
         }
         writer.append(copy);
-        trt.includeTimestamp(copy);
+        long seqId = cell.getSequenceId();
+        if (seqId > maxSeqId) {
+          maxSeqId = seqId;
+        }
       }
 
       @Override
       public void close(TaskAttemptContext c) throws IOException {
+        // true => product of major compaction
+        writer.appendMetadata(maxSeqId, true);
         writer.appendFileInfo(HStoreFile.BULKLOAD_TIME_KEY,
             Bytes.toBytes(System.currentTimeMillis()));
         writer.appendFileInfo(HStoreFile.BULKLOAD_TASK_KEY,
             Bytes.toBytes(context.getTaskAttemptID().toString()));
-        writer.appendFileInfo(HStoreFile.MAJOR_COMPACTION_KEY,
-            Bytes.toBytes(true));
         writer.appendFileInfo(HStoreFile.EXCLUDE_FROM_MINOR_COMPACTION_KEY,
             Bytes.toBytes(compactionExclude));
-        writer.appendFileInfo(HStoreFile.TIMERANGE_KEY,
-            WritableUtils.toByteArray(trt));
         writer.close();
       }
     };

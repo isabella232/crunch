@@ -28,6 +28,7 @@ import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.CellUtil;
 import org.apache.hadoop.hbase.KeyValue;
+import org.apache.hadoop.hbase.KeyValueUtil;
 import org.apache.hadoop.hbase.Tag;
 import org.apache.hadoop.hbase.io.hfile.CacheConfig;
 import org.apache.hadoop.hbase.io.hfile.HFile;
@@ -144,7 +145,7 @@ public class HFileInputFormat extends FileInputFormat<NullWritable, KeyValue> {
       if (!hasNext) {
         return false;
       }
-      value = KeyValue.cloneAndAddTags(scanner.getCell(), ImmutableList.<Tag>of());
+      value = KeyValueUtil.copyToNewKeyValue(scanner.getCell());
       if (stopRow != null &&
           Bytes.compareTo(
               value.getRowArray(), value.getRowOffset(), value.getRowLength(),

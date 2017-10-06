@@ -497,7 +497,7 @@ public class HFileTargetIT implements Serializable {
         }
         long c = input.second();
         Cell cell = CellUtil.createCell(Bytes.toBytes(w), Bytes.toBytes(c));
-        return Pair.of(KeyValue.cloneAndAddTags(cell, ImmutableList.<Tag>of()), null);
+        return Pair.of(KeyValueUtil.copyToNewKeyValue(cell), null);
       }
     }, tableOf(HBaseTypes.keyValues(), nulls()))
         .groupByKey(GroupingOptions.builder()
@@ -545,7 +545,7 @@ public class HFileTargetIT implements Serializable {
     assertTrue(seekOk);
     Cell kv = kvh.next();
     kvh.close();
-    return KeyValue.cloneAndAddTags(kv, ImmutableList.<Tag>of());
+    return KeyValueUtil.copyToNewKeyValue(kv);
   }
 
   private static Path copyResourceFileToHDFS(String resourceName) throws IOException {
