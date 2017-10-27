@@ -49,7 +49,7 @@ import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.hbase.Cell;
-import org.apache.hadoop.hbase.CellComparator;
+import org.apache.hadoop.hbase.CellComparatorImpl;
 import org.apache.hadoop.hbase.CellUtil;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HBaseTestingUtility;
@@ -540,7 +540,7 @@ public class HFileTargetIT implements Serializable {
       scanners.add(scanner);
     }
     assertTrue(!scanners.isEmpty());
-    KeyValueScanner kvh = new KeyValueHeap(scanners, CellComparator.COMPARATOR);
+    KeyValueScanner kvh = new KeyValueHeap(scanners, CellComparatorImpl.COMPARATOR);
     boolean seekOk = kvh.seek(fakeKV);
     assertTrue(seekOk);
     Cell kv = kvh.next();

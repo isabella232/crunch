@@ -24,7 +24,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.Cell;
-import org.apache.hadoop.hbase.CellComparator;
+import org.apache.hadoop.hbase.CellComparatorImpl;
 import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.KeyValueUtil;
@@ -85,7 +85,7 @@ public class HFileOutputFormatForCrunch extends FileOutputFormat<Object, Cell> {
     noCacheConf.setFloat(HConstants.HFILE_BLOCK_CACHE_SIZE_KEY, 0.0f);
     StoreFileWriter.Builder writerBuilder =
         new StoreFileWriter.Builder(conf, new CacheConfig(noCacheConf), fs)
-        .withComparator(CellComparator.COMPARATOR)
+        .withComparator(CellComparatorImpl.COMPARATOR)
         .withFilePath(outputPath)
         .withFileContext(getContext(conf));
     String bloomFilterType = conf.get(HCOLUMN_DESCRIPTOR_BLOOM_FILTER_TYPE_KEY);

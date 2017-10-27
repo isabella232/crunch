@@ -36,7 +36,7 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.Cell;
-import org.apache.hadoop.hbase.CellComparator;
+import org.apache.hadoop.hbase.CellComparatorImpl;
 import org.apache.hadoop.hbase.CellUtil;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HBaseTestingUtility;
@@ -391,7 +391,7 @@ public class SparkHFileTargetIT implements Serializable {
       scanners.add(scanner);
     }
     assertTrue(!scanners.isEmpty());
-    KeyValueScanner kvh = new KeyValueHeap(scanners, CellComparator.COMPARATOR);
+    KeyValueScanner kvh = new KeyValueHeap(scanners, CellComparatorImpl.COMPARATOR);
     boolean seekOk = kvh.seek(fakeKV);
     assertTrue(seekOk);
     Cell kv = kvh.next();

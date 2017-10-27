@@ -26,7 +26,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.hbase.Cell;
-import org.apache.hadoop.hbase.CellUtil;
+import org.apache.hadoop.hbase.PrivateCellUtil;
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.KeyValueUtil;
 import org.apache.hadoop.hbase.Tag;
@@ -132,7 +132,7 @@ public class HFileInputFormat extends FileInputFormat<NullWritable, KeyValue> {
           if(LOG.isInfoEnabled()) {
             LOG.info("Seeking to start row {}", Bytes.toStringBinary(startRow));
           }
-          Cell cell = CellUtil.createFirstOnRow(startRow, 0, (short) startRow.length);
+          Cell cell = PrivateCellUtil.createFirstOnRow(startRow, 0, (short) startRow.length);
           hasNext = seekAtOrAfter(scanner, cell);
         } else {
           LOG.info("Seeking to start");

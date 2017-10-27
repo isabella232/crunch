@@ -36,7 +36,7 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.Cell;
-import org.apache.hadoop.hbase.CellComparator;
+import org.apache.hadoop.hbase.CellComparatorImpl;
 import org.apache.hadoop.hbase.CellUtil;
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.client.Result;
@@ -329,7 +329,7 @@ public class HFileSourceIT implements Serializable {
       FileSystem fs = FileSystem.get(conf);
       w = HFile.getWriterFactory(conf, new CacheConfig(conf))
           .withPath(fs, inputPath)
-          .withComparator(CellComparator.COMPARATOR)
+          .withComparator(CellComparatorImpl.COMPARATOR)
           .withFileContext(new HFileContext())
           .create();
       for (KeyValue kv : sortedKVs) {
