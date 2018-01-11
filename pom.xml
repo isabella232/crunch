@@ -100,7 +100,7 @@ under the License.
     <hive.version>${cdh.hive.version}</hive.version>
     <parquet.version>${cdh.apache-parquet.version}</parquet.version>
     <javassist.version>3.16.1-GA</javassist.version>
-    <jackson.databind.version>2.6.1</jackson.databind.version>
+    <jackson.databind.version>${cdh.jackson2.version}</jackson.databind.version>
     <protobuf-java.version>${cdh.protobuf.version}</protobuf-java.version>
     <libthrift.version>${cdh.thrift.version}</libthrift.version>
     <slf4j.version>${cdh.slf4j.version}</slf4j.version>
