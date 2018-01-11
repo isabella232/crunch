@@ -106,10 +106,7 @@ public class SparkWordCountHBaseIT {
         Configuration conf = HBaseConfiguration.create(tmpDir.getDefaultConfiguration());
         conf.set(HConstants.TEMPORARY_FS_DIRECTORY_KEY, tmpDir.getFile("hbase-staging").getAbsolutePath());
         hbaseTestUtil = new HBaseTestingUtility(conf);
-        hbaseTestUtil.startMiniZKCluster();
-        hbaseTestUtil.getConfiguration().set("hadoop.registry.zk.quorum",
-                "localhost:" + hbaseTestUtil.getZkCluster().getClientPort());
-        hbaseTestUtil.startMiniHBaseCluster(1, 1);
+        hbaseTestUtil.startMiniCluster();
     }
 
     @Test
@@ -127,8 +124,7 @@ public class SparkWordCountHBaseIT {
 
     @After
     public void tearDown() throws Exception {
-        hbaseTestUtil.shutdownMiniHBaseCluster();
-        hbaseTestUtil.shutdownMiniZKCluster();
+        hbaseTestUtil.shutdownMiniCluster();
     }
 
     public void run(Pipeline pipeline) throws Exception {
