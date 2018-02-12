@@ -506,6 +506,10 @@ under the License.
       <id>hadoop-2</id>
       <activation>
         <activeByDefault>true</activeByDefault>
+        <property>
+          <name>crunch.platform</name>
+          <value>2</value>
+        </property>
       </activation>
       <properties>
         <hadoop.version>${cdh.hadoop.version}</hadoop.version>
